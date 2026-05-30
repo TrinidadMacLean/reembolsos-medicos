@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reembolsos Medicos</title>
 <style>
-:root{color-scheme:light;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--primary:#3b82f6;--primary-d:#2563eb;--green:#22c55e;--purple:#8b5cf6;--amber:#f59e0b;--red:#ef4444}
+:root{color-scheme:light;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--primary:#3b82f6;--primary-d:#2563eb;--red:#ef4444}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 header h1{font-size:17px;font-weight:700}
 .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
@@ -60,7 +60,7 @@ header h1{font-size:17px;font-weight:700}
 .upload-box input[type=file]{display:none}
 .upload-inner{display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 .upload-ok{font-size:12px;color:#166534;font-weight:600;background:#f0fdf4;padding:2px 8px;border-radius:4px;margin-top:2px}
-.sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text)}
+.sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .tl{display:flex;flex-direction:column}
 .tl-item{display:flex;gap:10px;padding-bottom:14px}
 .tl-item:last-child{padding-bottom:0}
@@ -85,238 +85,284 @@ header h1{font-size:17px;font-weight:700}
 <body>
 <header>
   <h1>Reembolsos Medicos</h1>
-  <button class="btn btn-primary" onclick="openNew()">+ Nuevo reembolso</button>
+  <button class="btn btn-primary" id="btnNew">+ Nuevo reembolso</button>
 </header>
 <div class="stats" id="statsBar"></div>
-<div class="pipeline" id="pipeline"><div class="loading"><div class="spinner"></div> Cargando reembolsos...</div></div>
+<div class="pipeline" id="pipeline"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+
 <div class="overlay hidden" id="newOverlay">
   <div class="modal">
-    <div class="modal-hd"><h2>Nuevo reembolso</h2><button class="modal-x" onclick="closeNew()">x</button></div>
+    <div class="modal-hd"><h2>Nuevo reembolso</h2><button class="modal-x" id="btnCloseNew">x</button></div>
     <div class="modal-body">
-      <div class="field"><label>Descripcion *</label><input id="nName" placeholder="Ej: Consulta cardiologia Dr. Lopez"/></div>
+      <div class="field"><label>Descripcion *</label><input id="nName" placeholder="Ej: Consulta cardiologia"/></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field"><label>Fecha prestacion</label><input type="date" id="nDate"/></div>
+        <div class="field"><label>Fecha</label><input type="date" id="nDate"/></div>
         <div class="field"><label>Monto ($)</label><input type="number" id="nAmount" placeholder="45000"/></div>
       </div>
-      <div class="field">
-        <label>Orden medica</label>
-        <div class="upload-box" onclick="document.getElementById('fOrden').click()">
-          <div class="upload-inner"><span style="font-size:22px">doc</span><span style="font-size:12px;color:var(--muted)">Haz clic para adjuntar (PDF o imagen)</span><span class="upload-ok hidden" id="ordenOk"></span></div>
-          <input type="file" id="fOrden" accept=".pdf,.jpg,.jpeg,.png" onchange="onFile('orden',this)"/>
+      <div class="field"><label>Orden medica</label>
+        <div class="upload-box" id="boxOrden">
+          <div class="upload-inner"><span style="font-size:22px">[doc]</span><span style="font-size:12px;color:var(--muted)">Adjuntar PDF o imagen</span><span class="upload-ok hidden" id="ordenOk"></span></div>
+          <input type="file" id="fOrden" accept=".pdf,.jpg,.jpeg,.png"/>
         </div>
       </div>
-      <div class="field">
-        <label>Boleta / Comprobante</label>
-        <div class="upload-box" onclick="document.getElementById('fBoleta').click()">
-          <div class="upload-inner"><span style="font-size:22px">rec</span><span style="font-size:12px;color:var(--muted)">Haz clic para adjuntar (PDF o imagen)</span><span class="upload-ok hidden" id="boletaOk"></span></div>
-          <input type="file" id="fBoleta" accept=".pdf,.jpg,.jpeg,.png" onchange="onFile('boleta',this)"/>
+      <div class="field"><label>Boleta</label>
+        <div class="upload-box" id="boxBoleta">
+          <div class="upload-inner"><span style="font-size:22px">[rec]</span><span style="font-size:12px;color:var(--muted)">Adjuntar PDF o imagen</span><span class="upload-ok hidden" id="boletaOk"></span></div>
+          <input type="file" id="fBoleta" accept=".pdf,.jpg,.jpeg,.png"/>
         </div>
       </div>
-      <div class="field"><label>Notas (opcional)</label><textarea id="nNote" placeholder="Informacion adicional..."></textarea></div>
+      <div class="field"><label>Notas</label><textarea id="nNote" placeholder="Info adicional..."></textarea></div>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-ghost" onclick="closeNew()">Cancelar</button>
-      <button class="btn btn-primary" id="saveBtn" onclick="saveNew()">Guardar</button>
+      <button class="btn btn-ghost" id="btnCancelNew">Cancelar</button>
+      <button class="btn btn-primary" id="saveBtn">Guardar</button>
     </div>
   </div>
 </div>
+
 <div class="overlay hidden" id="detOverlay">
   <div class="modal">
-    <div class="modal-hd"><h2 id="detTitle">Detalle</h2><button class="modal-x" onclick="closeDet()">x</button></div>
+    <div class="modal-hd"><h2 id="detTitle">Detalle</h2><button class="modal-x" id="btnCloseDet">x</button></div>
     <div class="modal-body" id="detBody"></div>
     <div class="modal-ft" id="detFt"></div>
   </div>
 </div>
+
 <script>
-const API='https://script.google.com/macros/s/AKfycbxvs_Me7KmnMvBIdvR9KibCzeDkqkloksyALGI3DbMQPBy8J7kuRJO1hFTaTQNcFIqjNg/exec';
-const STAGES=[
-  {id:'pending',   label:'Pendiente',         color:'#64748b', icon:'[P]', action:'Enviar a Banmedica'},
-  {id:'banmedica', label:'En Banmedica',       color:'#3b82f6', icon:'[B]', action:'Marcar aprobado'},
-  {id:'approved',  label:'Aprobado Banmedica', color:'#8b5cf6', icon:'[OK]', action:'Enviar a Bice Vida'},
-  {id:'bicevida',  label:'En Bice Vida',       color:'#f59e0b', icon:'[S]', action:'Marcar completado'},
-  {id:'done',      label:'Completado',         color:'#22c55e', icon:'[D]', action:null},
+var API = 'https://script.google.com/macros/s/AKfycbxvs_Me7KmnMvBIdvR9KibCzeDkqkloksyALGI3DbMQPBy8J7kuRJO1hFTaTQNcFIqjNg/exec';
+var STAGES = [
+  {id:'pending',   label:'Pendiente',         color:'#64748b', action:'Enviar a Banmedica'},
+  {id:'banmedica', label:'En Banmedica',       color:'#3b82f6', action:'Marcar aprobado'},
+  {id:'approved',  label:'Aprobado Banmedica', color:'#8b5cf6', action:'Enviar a Bice Vida'},
+  {id:'bicevida',  label:'En Bice Vida',       color:'#f59e0b', action:'Marcar completado'},
+  {id:'done',      label:'Completado',         color:'#22c55e', action:null}
 ];
-let items=[],curDet=null,nOrd=null,nBol=null,nOrdName='',nBolName='';
+var items = [], curDet = null, nOrd = null, nBol = null, nOrdName = '', nBolName = '';
 
-function clp(n){return '$'+Number(n).toLocaleString('es-CL')}
-function fDate(d){if(!d)return'-';try{return new Date(d+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'})}catch(e){return d}}
-function fDT(d){if(!d)return'';try{return new Date(d).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return d}}
+function clp(n) { return '$' + Number(n).toLocaleString('es-CL'); }
+function fDate(d) {
+  if (!d) return '-';
+  try { return new Date(d + 'T12:00:00').toLocaleDateString('es-CL', {day:'2-digit',month:'2-digit',year:'numeric'}); }
+  catch(e) { return d; }
+}
+function fDT(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('es-CL', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  catch(e) { return d; }
+}
 
-async function fetchAll(){
-  try{
-    const res=await fetch(API+'?action=getAll');
-    items=await res.json();
+async function fetchAll() {
+  try {
+    var res = await fetch(API + '?action=getAll');
+    items = await res.json();
     render();
-  }catch(e){
-    document.getElementById('pipeline').innerHTML='<div class="loading">Error al cargar. Intenta recargar la pagina.</div>';
+  } catch(e) {
+    document.getElementById('pipeline').innerHTML = '<div class="loading">Error al cargar. Recarga la pagina.</div>';
   }
 }
 
-async function postData(data){
-  try{await fetch(API,{method:'POST',mode:'no-cors',body:JSON.stringify(data)});}catch(e){}
-  await new Promise(r=>setTimeout(r,1800));
+async function postData(data) {
+  try { await fetch(API, {method:'POST', mode:'no-cors', body:JSON.stringify(data)}); } catch(e) {}
+  await new Promise(function(r){ setTimeout(r, 1800); });
   await fetchAll();
 }
 
-function render(){renderStats();renderPipeline()}
+function render() { renderStats(); renderPipeline(); }
 
-function renderStats(){
-  const total=items.length,done=items.filter(i=>i.stage==='done').length;
-  const inProg=items.filter(i=>i.stage!=='done'&&i.stage!=='pending').length;
-  const totalAmt=items.reduce((s,i)=>s+(Number(i.amount)||0),0);
-  document.getElementById('statsBar').innerHTML=
-    '<div class="stat"><span class="stat-value">'+total+'</span><span class="stat-label">Total</span></div>'+
-    '<div class="stat"><span class="stat-value" style="color:#3b82f6">'+inProg+'</span><span class="stat-label">En tramite</span></div>'+
-    '<div class="stat"><span class="stat-value" style="color:#22c55e">'+done+'</span><span class="stat-label">Completados</span></div>'+
-    '<div class="stat"><span class="stat-value" style="color:#8b5cf6">'+(totalAmt?clp(totalAmt):'-')+'</span><span class="stat-label">Monto total</span></div>';
+function renderStats() {
+  var total = items.length;
+  var done = items.filter(function(i){ return i.stage === 'done'; }).length;
+  var inProg = items.filter(function(i){ return i.stage !== 'done' && i.stage !== 'pending'; }).length;
+  var amt = items.reduce(function(s,i){ return s + (Number(i.amount)||0); }, 0);
+  var html = '<div class="stat"><span class="stat-value">' + total + '</span><span class="stat-label">Total</span></div>';
+  html += '<div class="stat"><span class="stat-value" style="color:#3b82f6">' + inProg + '</span><span class="stat-label">En tramite</span></div>';
+  html += '<div class="stat"><span class="stat-value" style="color:#22c55e">' + done + '</span><span class="stat-label">Completados</span></div>';
+  html += '<div class="stat"><span class="stat-value" style="color:#8b5cf6">' + (amt ? clp(amt) : '-') + '</span><span class="stat-label">Monto total</span></div>';
+  document.getElementById('statsBar').innerHTML = html;
 }
 
-function renderPipeline(){
-  document.getElementById('pipeline').innerHTML=STAGES.map(function(s){
-    var cards=items.filter(function(i){return i.stage===s.id;});
-    return '<div class="column">'+
-      '<div class="col-hd"><div class="col-title"><span class="stage-dot" style="background:'+s.color+'"></span>'+s.icon+' '+s.label+'</div><span class="badge">'+cards.length+'</span></div>'+
-      '<div class="col-cards">'+(cards.length?cards.map(function(c){return cardHtml(c,s);}).join(''):'<div class="empty">Sin reembolsos</div>')+'</div>'+
-    '</div>';
-  }).join('');
+function renderPipeline() {
+  var html = '';
+  for (var si = 0; si < STAGES.length; si++) {
+    var s = STAGES[si];
+    var cards = items.filter(function(i){ return i.stage === s.id; });
+    html += '<div class="column">';
+    html += '<div class="col-hd"><div class="col-title"><span class="stage-dot" style="background:' + s.color + '"></span>' + s.label + '</div><span class="badge">' + cards.length + '</span></div>';
+    html += '<div class="col-cards">';
+    if (cards.length) {
+      for (var ci = 0; ci < cards.length; ci++) { html += cardHtml(cards[ci], s); }
+    } else {
+      html += '<div class="empty">Sin reembolsos</div>';
+    }
+    html += '</div></div>';
+  }
+  document.getElementById('pipeline').innerHTML = html;
+  bindCardEvents();
 }
 
-function cardHtml(item,stage){
-  var hasOrd=item.ordenUrl,hasBol=item.boletaUrl;
-  var html='<div class="card" onclick="openDet('+item.id+')">';
-  html+='<div class="card-top"><span class="card-name">'+item.name+'</span>'+(item.amount?'<span class="card-amount">'+clp(item.amount)+'</span>':'')+'</div>';
-  html+='<div class="card-date">'+fDate(item.date)+'</div>';
-  html+='<div class="card-docs">';
-  html+='<span class="chip '+(hasOrd?'chip-ok':'chip-miss')+'">'+(hasOrd?'OK':'!')+'  Orden</span>';
-  html+='<span class="chip '+(hasBol?'chip-ok':'chip-miss')+'">'+(hasBol?'OK':'!')+' Boleta</span>';
-  html+='</div>';
-  if(item.latestNote)html+='<div class="card-note">'+item.latestNote+'</div>';
-  html+='<div class="card-actions" onclick="event.stopPropagation()">';
-  if(stage.action)html+='<button class="btn-adv" onclick="advance('+item.id+')">'+stage.action+' &rarr;</button>';
-  html+='<button class="btn-del" onclick="del('+item.id+')">Del</button>';
-  html+='</div></div>';
+function cardHtml(item, stage) {
+  var hasOrd = item.ordenUrl, hasBol = item.boletaUrl;
+  var html = '<div class="card" data-id="' + item.id + '" data-action="open">';
+  html += '<div class="card-top"><span class="card-name">' + item.name + '</span>';
+  if (item.amount) html += '<span class="card-amount">' + clp(item.amount) + '</span>';
+  html += '</div><div class="card-date">' + fDate(item.date) + '</div>';
+  html += '<div class="card-docs">';
+  html += '<span class="chip ' + (hasOrd ? 'chip-ok' : 'chip-miss') + '">' + (hasOrd ? 'OK' : '!') + ' Orden</span>';
+  html += '<span class="chip ' + (hasBol ? 'chip-ok' : 'chip-miss') + '">' + (hasBol ? 'OK' : '!') + ' Boleta</span>';
+  html += '</div>';
+  if (item.latestNote) html += '<div class="card-note">' + item.latestNote + '</div>';
+  html += '<div class="card-actions">';
+  if (stage.action) html += '<button class="btn-adv" data-id="' + item.id + '" data-action="adv">' + stage.action + ' &rarr;</button>';
+  html += '<button class="btn-del" data-id="' + item.id + '" data-action="del">Eliminar</button>';
+  html += '</div></div>';
   return html;
 }
 
-async function advance(id){
-  var item=items.find(function(i){return i.id==id;});
-  if(!item)return;
-  var idx=STAGES.findIndex(function(s){return s.id===item.stage;});
-  if(idx<STAGES.length-1){
-    var newStage=STAGES[idx+1].id;
-    var history=(item.history||[]).concat([{stage:newStage,date:new Date().toISOString(),note:''}]);
+function bindCardEvents() {
+  document.getElementById('pipeline').onclick = function(e) {
+    var btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    var id = btn.getAttribute('data-id');
+    var action = btn.getAttribute('data-action');
+    if (action === 'open') openDet(id);
+    else if (action === 'adv') { e.stopPropagation(); advance(id); }
+    else if (action === 'del') { e.stopPropagation(); del(id); }
+  };
+}
+
+async function advance(id) {
+  var item = items.find(function(i){ return i.id == id; });
+  if (!item) return;
+  var idx = STAGES.findIndex(function(s){ return s.id === item.stage; });
+  if (idx < STAGES.length - 1) {
+    var newStage = STAGES[idx + 1].id;
+    var history = (item.history || []).concat([{stage: newStage, date: new Date().toISOString(), note:''}]);
     showToast('Actualizando...');
-    await postData({action:'update',id:item.id,stage:newStage,history:history});
+    await postData({action:'update', id: item.id, stage: newStage, history: history});
     showToast('Actualizado!');
   }
 }
 
-async function del(id){
-  if(!confirm('Eliminar este reembolso?'))return;
+async function del(id) {
+  if (!confirm('Eliminar este reembolso?')) return;
   showToast('Eliminando...');
-  await postData({action:'delete',id:id});
+  await postData({action:'delete', id: id});
   showToast('Eliminado');
 }
 
-function openNew(){
-  ['nName','nDate','nAmount','nNote'].forEach(function(id){document.getElementById(id).value='';});
-  nOrd=nBol=null;nOrdName=nBolName='';
-  ['ordenOk','boletaOk'].forEach(function(id){var el=document.getElementById(id);el.textContent='';el.classList.add('hidden');});
+function openNew() {
+  ['nName','nDate','nAmount','nNote'].forEach(function(id){ document.getElementById(id).value = ''; });
+  nOrd = nBol = null; nOrdName = nBolName = '';
+  ['ordenOk','boletaOk'].forEach(function(id){
+    var el = document.getElementById(id); el.textContent = ''; el.classList.add('hidden');
+  });
+  document.getElementById('fOrden').value = '';
+  document.getElementById('fBoleta').value = '';
   document.getElementById('newOverlay').classList.remove('hidden');
 }
-function closeNew(){document.getElementById('newOverlay').classList.add('hidden');}
+function closeNew() { document.getElementById('newOverlay').classList.add('hidden'); }
 
-function onFile(type,input){
-  var file=input.files[0];if(!file)return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    if(type==='orden'){nOrd=e.target.result;nOrdName=file.name;}
-    else{nBol=e.target.result;nBolName=file.name;}
-    var ok=document.getElementById(type==='orden'?'ordenOk':'boletaOk');
-    ok.textContent='OK '+file.name;ok.classList.remove('hidden');
+function onFile(type, file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    if (type === 'orden') { nOrd = e.target.result; nOrdName = file.name; }
+    else { nBol = e.target.result; nBolName = file.name; }
+    var ok = document.getElementById(type === 'orden' ? 'ordenOk' : 'boletaOk');
+    ok.textContent = 'OK: ' + file.name; ok.classList.remove('hidden');
   };
   reader.readAsDataURL(file);
 }
 
-async function saveNew(){
-  var name=document.getElementById('nName').value.trim();
-  if(!name){alert('Ingresa una descripcion');return;}
-  var id=Date.now().toString();
-  var btn=document.getElementById('saveBtn');
-  btn.textContent='Guardando...';btn.disabled=true;
-  await postData({action:'create',id:id,name:name,
-    date:document.getElementById('nDate').value,
-    amount:document.getElementById('nAmount').value,
-    latestNote:document.getElementById('nNote').value.trim()
+async function saveNew() {
+  var name = document.getElementById('nName').value.trim();
+  if (!name) { alert('Ingresa una descripcion'); return; }
+  var id = Date.now().toString();
+  var btn = document.getElementById('saveBtn');
+  btn.textContent = 'Guardando...'; btn.disabled = true;
+  await postData({action:'create', id:id, name:name,
+    date: document.getElementById('nDate').value,
+    amount: document.getElementById('nAmount').value,
+    latestNote: document.getElementById('nNote').value.trim()
   });
-  if(nOrd){
-    showToast('Subiendo orden medica...');
-    await postData({action:'uploadFile',itemId:id,fileType:'orden',fileData:nOrd,fileName:nOrdName,mimeType:nOrd.split(';')[0].split(':')[1]});
-  }
-  if(nBol){
-    showToast('Subiendo boleta...');
-    await postData({action:'uploadFile',itemId:id,fileType:'boleta',fileData:nBol,fileName:nBolName,mimeType:nBol.split(';')[0].split(':')[1]});
-  }
-  btn.textContent='Guardar';btn.disabled=false;
-  closeNew();showToast('Reembolso creado!');
+  if (nOrd) { showToast('Subiendo orden...'); await postData({action:'uploadFile', itemId:id, fileType:'orden', fileData:nOrd, fileName:nOrdName, mimeType:nOrd.split(';')[0].split(':')[1]}); }
+  if (nBol) { showToast('Subiendo boleta...'); await postData({action:'uploadFile', itemId:id, fileType:'boleta', fileData:nBol, fileName:nBolName, mimeType:nBol.split(';')[0].split(':')[1]}); }
+  btn.textContent = 'Guardar'; btn.disabled = false;
+  closeNew(); showToast('Reembolso creado!');
 }
 
-function openDet(id){
-  var item=items.find(function(i){return i.id==id;});if(!item)return;
-  curDet=id;
-  var stage=STAGES.find(function(s){return s.id===item.stage;});
-  document.getElementById('detTitle').textContent=item.name;
-  var tl=(item.history||[]).map(function(h,idx,arr){
-    var s=STAGES.find(function(x){return x.id===h.stage;});
-    return '<div class="tl-item">'+
-      '<div class="tl-l"><div class="tl-dot" style="background:'+(s?s.color:'#ccc')+'"></div>'+(idx<arr.length-1?'<div class="tl-line"></div>':'')+'</div>'+
-      '<div class="tl-r"><div class="tl-title">'+(s?s.label:h.stage)+'</div><div class="tl-date">'+fDT(h.date)+'</div>'+(h.note?'<div class="tl-note">'+h.note+'</div>':'')+'</div>'+
-    '</div>';
-  }).join('');
-
-  document.getElementById('detBody').innerHTML=
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">'+
-    '<span class="chip chip-neu">'+fDate(item.date)+'</span>'+
-    (item.amount?'<span class="chip chip-neu">'+clp(item.amount)+'</span>':'')+
-    '<span class="chip" style="background:'+stage.color+'18;border:1px solid '+stage.color+'44;color:'+stage.color+'">'+stage.label+'</span>'+
-    '</div>'+
-    '<div style="margin-top:14px"><div class="sec-title" style="margin-bottom:8px">Documentos</div>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
-    (item.ordenUrl?'<a href="'+item.ordenUrl+'" target="_blank" class="btn btn-ghost btn-sm">Orden medica</a>':'<span class="chip chip-miss">Orden pendiente</span>')+
-    (item.boletaUrl?'<a href="'+item.boletaUrl+'" target="_blank" class="btn btn-ghost btn-sm">Boleta</a>':'<span class="chip chip-miss">Boleta pendiente</span>')+
-    '</div></div>'+
-    (item.latestNote?'<div class="card-note" style="margin-top:12px">'+item.latestNote+'</div>':'')+
-    '<div style="margin-top:16px"><div class="sec-title" style="margin-bottom:8px">Historial</div>'+
-    '<div class="tl">'+(tl||'Sin historial')+'</div></div>'+
-    '<div style="margin-top:16px"><div class="sec-title" style="margin-bottom:6px">Agregar nota</div>'+
-    '<div class="note-row"><input type="text" id="noteInp" placeholder="Observacion..." onkeydown="if(event.key==='Enter')addNote()"/>'+
-    '<button class="btn btn-primary btn-sm" onclick="addNote()">Agregar</button></div></div>';
-
-  var btns=[];
-  if(stage.action)btns.push('<button class="btn btn-primary" onclick="advance('+id+');closeDet()">'+stage.action+' &rarr;</button>');
-  btns.push('<button class="btn btn-ghost" onclick="closeDet()">Cerrar</button>');
-  document.getElementById('detFt').innerHTML=btns.join('');
+function openDet(id) {
+  var item = items.find(function(i){ return i.id == id; });
+  if (!item) return;
+  curDet = id;
+  var stage = STAGES.find(function(s){ return s.id === item.stage; });
+  document.getElementById('detTitle').textContent = item.name;
+  var tlHtml = '';
+  var hist = item.history || [];
+  for (var hi = 0; hi < hist.length; hi++) {
+    var h = hist[hi];
+    var s = STAGES.find(function(x){ return x.id === h.stage; });
+    tlHtml += '<div class="tl-item"><div class="tl-l"><div class="tl-dot" style="background:' + (s ? s.color : '#ccc') + '"></div>';
+    if (hi < hist.length - 1) tlHtml += '<div class="tl-line"></div>';
+    tlHtml += '</div><div class="tl-r"><div class="tl-title">' + (s ? s.label : h.stage) + '</div>';
+    tlHtml += '<div class="tl-date">' + fDT(h.date) + '</div>';
+    if (h.note) tlHtml += '<div class="tl-note">' + h.note + '</div>';
+    tlHtml += '</div></div>';
+  }
+  var bodyHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">';
+  bodyHtml += '<span class="chip chip-neu">' + fDate(item.date) + '</span>';
+  if (item.amount) bodyHtml += '<span class="chip chip-neu">' + clp(item.amount) + '</span>';
+  bodyHtml += '<span class="chip" style="background:' + stage.color + '18;border:1px solid ' + stage.color + '44;color:' + stage.color + '">' + stage.label + '</span></div>';
+  bodyHtml += '<div style="margin-top:14px"><div class="sec-title" style="margin-bottom:8px">Documentos</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
+  bodyHtml += (item.ordenUrl ? '<a href="' + item.ordenUrl + '" target="_blank" class="btn btn-ghost btn-sm">Orden medica</a>' : '<span class="chip chip-miss">Orden pendiente</span>');
+  bodyHtml += (item.boletaUrl ? '<a href="' + item.boletaUrl + '" target="_blank" class="btn btn-ghost btn-sm">Boleta</a>' : '<span class="chip chip-miss">Boleta pendiente</span>');
+  bodyHtml += '</div></div>';
+  if (item.latestNote) bodyHtml += '<div class="card-note" style="margin-top:12px">' + item.latestNote + '</div>';
+  bodyHtml += '<div style="margin-top:16px"><div class="sec-title" style="margin-bottom:8px">Historial</div><div class="tl">' + (tlHtml || 'Sin historial') + '</div></div>';
+  bodyHtml += '<div style="margin-top:16px"><div class="sec-title" style="margin-bottom:6px">Agregar nota</div>';
+  bodyHtml += '<div class="note-row"><input type="text" id="noteInp" placeholder="Observacion..."/><button class="btn btn-primary btn-sm" id="btnAddNote">Agregar</button></div></div>';
+  document.getElementById('detBody').innerHTML = bodyHtml;
+  document.getElementById('noteInp').addEventListener('keydown', function(e){ if (e.keyCode === 13) addNote(); });
+  document.getElementById('btnAddNote').addEventListener('click', addNote);
+  var btnsHtml = '';
+  if (stage.action) btnsHtml += '<button class="btn btn-primary" id="btnDetAdv">' + stage.action + ' &rarr;</button>';
+  btnsHtml += '<button class="btn btn-ghost" id="btnDetClose">Cerrar</button>';
+  document.getElementById('detFt').innerHTML = btnsHtml;
+  if (stage.action) document.getElementById('btnDetAdv').addEventListener('click', function(){ advance(id); closeDet(); });
+  document.getElementById('btnDetClose').addEventListener('click', closeDet);
   document.getElementById('detOverlay').classList.remove('hidden');
 }
-function closeDet(){document.getElementById('detOverlay').classList.add('hidden');curDet=null;}
 
-async function addNote(){
-  var inp=document.getElementById('noteInp');
-  var note=inp.value.trim();if(!note||!curDet)return;
-  var item=items.find(function(i){return i.id==curDet;});if(!item)return;
-  var history=(item.history||[]).concat([{stage:item.stage,date:new Date().toISOString(),note:note}]);
+function closeDet() { document.getElementById('detOverlay').classList.add('hidden'); curDet = null; }
+
+async function addNote() {
+  var inp = document.getElementById('noteInp');
+  var note = inp.value.trim();
+  if (!note || !curDet) return;
+  var item = items.find(function(i){ return i.id == curDet; });
+  if (!item) return;
+  var history = (item.history || []).concat([{stage: item.stage, date: new Date().toISOString(), note: note}]);
   showToast('Guardando nota...');
-  await postData({action:'update',id:curDet,latestNote:note,history:history});
+  await postData({action:'update', id:curDet, latestNote:note, history:history});
   openDet(curDet);
 }
 
-function showToast(msg){
-  var t=document.createElement('div');t.className='toast';t.textContent=msg;
-  document.body.appendChild(t);setTimeout(function(){t.remove();},2500);
+function showToast(msg) {
+  var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2500);
 }
 
-document.getElementById('newOverlay').addEventListener('click',function(e){if(e.target===e.currentTarget)closeNew();});
-document.getElementById('detOverlay').addEventListener('click',function(e){if(e.target===e.currentTarget)closeDet();});
+document.getElementById('btnNew').addEventListener('click', openNew);
+document.getElementById('btnCloseNew').addEventListener('click', closeNew);
+document.getElementById('btnCancelNew').addEventListener('click', closeNew);
+document.getElementById('saveBtn').addEventListener('click', saveNew);
+document.getElementById('btnCloseDet').addEventListener('click', closeDet);
+document.getElementById('boxOrden').addEventListener('click', function(){ document.getElementById('fOrden').click(); });
+document.getElementById('boxBoleta').addEventListener('click', function(){ document.getElementById('fBoleta').click(); });
+document.getElementById('fOrden').addEventListener('change', function(){ onFile('orden', this.files[0]); });
+document.getElementById('fBoleta').addEventListener('change', function(){ onFile('boleta', this.files[0]); });
+document.getElementById('newOverlay').addEventListener('click', function(e){ if (e.target === e.currentTarget) closeNew(); });
+document.getElementById('detOverlay').addEventListener('click', function(e){ if (e.target === e.currentTarget) closeDet(); });
 
 fetchAll();
 </script>
