@@ -2,369 +2,981 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reembolsos Medicos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reembolsos Familiares</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-:root{color-scheme:light;--bg:#f8fafc;--surface:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--primary:#3b82f6;--primary-d:#2563eb;--red:#ef4444}
+:root {
+  --bg:#f0f4f8;--card:#fff;--primary:#2563eb;--primary-dark:#1d4ed8;
+  --green:#16a34a;--green-bg:#dcfce7;--red:#dc2626;--red-bg:#fee2e2;
+  --orange:#ea580c;--orange-bg:#ffedd5;--yellow:#ca8a04;--yellow-bg:#fef9c3;
+  --blue-bg:#dbeafe;--blue:#1e40af;
+  --gray:#6b7280;--gray-light:#f3f4f6;--border:#e5e7eb;--text:#111827;--text-soft:#6b7280;
+  --shadow:0 1px 3px rgba(0,0,0,.1);--shadow-md:0 4px 6px -1px rgba(0,0,0,.1);--r:12px;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-header h1{font-size:17px;font-weight:700}
-.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
-.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-d)}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{background:var(--bg)}
-.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
-.stats{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
-.stat{flex:1;padding:12px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
-.stat:last-child{border-right:none}
-.stat-value{font-size:22px;font-weight:700}
-.stat-label{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
-.pipeline{display:flex;gap:14px;padding:20px 24px;overflow-x:auto;min-height:calc(100vh - 120px);align-items:flex-start}
-.column{flex:0 0 260px;background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden}
-.col-hd{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
-.col-title{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
-.stage-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.badge{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 7px;font-size:12px;color:var(--muted)}
-.col-cards{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:60px}
-.card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px;cursor:pointer;transition:box-shadow .15s,border-color .15s}
-.card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08);border-color:var(--primary)}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px}
-.card-name{font-size:13px;font-weight:600;line-height:1.3;flex:1}
-.card-amount{font-size:12px;font-weight:700;color:var(--primary);white-space:nowrap;margin-left:6px}
-.card-date{font-size:11px;color:var(--muted);margin-bottom:8px}
-.card-docs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
-.chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:500}
-.chip-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
-.chip-miss{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
-.chip-neu{background:var(--surface);border:1px solid var(--border);color:var(--muted)}
-.card-note{font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:5px;padding:4px 7px;margin-bottom:8px;line-height:1.4}
-.card-actions{display:flex;gap:5px;justify-content:flex-end}
-.btn-adv{background:var(--primary);color:#fff;padding:4px 9px;font-size:11px;border-radius:6px;border:none;cursor:pointer;font-weight:600}
-.btn-adv:hover{background:var(--primary-d)}
-.btn-del{background:transparent;color:var(--red);border:1px solid #fecaca;padding:4px 9px;font-size:11px;border-radius:6px;cursor:pointer}
-.empty{text-align:center;padding:18px 8px;color:var(--muted);font-size:12px}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:var(--surface);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.14)}
-.modal-hd{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-hd h2{font-size:15px;font-weight:700}
-.modal-x{background:none;border:none;cursor:pointer;color:var(--muted);font-size:22px;line-height:1;padding:0}
-.modal-body{padding:18px 22px;display:flex;flex-direction:column;gap:14px}
-.modal-ft{padding:14px 22px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:12px;font-weight:600}
-.field input,.field textarea{padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
-.field input:focus,.field textarea:focus{border-color:var(--primary)}
-.field textarea{resize:vertical;min-height:60px}
-.upload-box{border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:var(--bg);transition:all .15s}
-.upload-box:hover{border-color:var(--primary);background:#eff6ff}
-.upload-box input[type=file]{display:none}
-.upload-inner{display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
-.upload-ok{font-size:12px;color:#166534;font-weight:600;background:#f0fdf4;padding:2px 8px;border-radius:4px;margin-top:2px}
-.sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.tl{display:flex;flex-direction:column}
-.tl-item{display:flex;gap:10px;padding-bottom:14px}
-.tl-item:last-child{padding-bottom:0}
-.tl-l{display:flex;flex-direction:column;align-items:center}
-.tl-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;margin-top:2px}
-.tl-line{width:2px;flex:1;background:var(--border);min-height:16px}
-.tl-r{flex:1}
-.tl-title{font-size:13px;font-weight:600}
-.tl-date{font-size:11px;color:var(--muted);margin-top:1px}
-.tl-note{font-size:11px;color:var(--muted);margin-top:2px;font-style:italic}
-.note-row{display:flex;gap:7px;margin-top:4px}
-.note-row input{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;outline:none;font-family:inherit}
-.note-row input:focus{border-color:var(--primary)}
-.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--muted);font-size:14px}
-.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.hdr{background:var(--primary);color:#fff;padding:14px 18px 10px;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:17px;font-weight:700}.hdr-sub{font-size:11px;opacity:.8;margin-top:1px}
+.hdr-stats{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:600}
+.chip-red{background:rgba(239,68,68,.4)}.chip-green{background:rgba(34,197,94,.3)}.chip-orange{background:rgba(234,88,12,.4)}
+
+/* TABS */
+.tabs{background:#fff;border-bottom:1px solid var(--border);display:flex;padding:0 16px}
+.tab{flex:1;text-align:center;padding:11px 4px 9px;font-size:13px;font-weight:500;color:var(--text-soft);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* MAIN */
+.main{padding:14px;max-width:720px;margin:0 auto;padding-bottom:90px}
+
+/* SMART INPUT */
+.smart-bar{background:#fff;border-radius:var(--r);box-shadow:var(--shadow-md);padding:12px 14px;margin-bottom:14px;border:2px solid var(--primary)}
+.smart-bar textarea{width:100%;border:none;outline:none;resize:none;font-size:14px;color:var(--text);background:transparent;font-family:inherit;min-height:46px}
+.smart-bar textarea::placeholder{color:#9ca3af}
+.bar-row{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.qbtn{background:var(--gray-light);border:none;border-radius:20px;padding:5px 11px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text)}
+.qbtn:hover{background:var(--border)}
+.send-btn{margin-left:auto;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer}
+
+/* UPLOAD DROP ZONE - global */
+.global-drop{border:2px dashed var(--border);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;margin-bottom:14px}
+.global-drop:hover,.global-drop.over{border-color:var(--primary);background:#eff6ff}
+.global-drop-text{font-size:13px;color:var(--text-soft)}
+.global-drop-text strong{color:var(--primary)}
+
+/* CARDS */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;cursor:pointer;transition:transform .1s,box-shadow .1s}
+.card:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.card-hdr{padding:13px 15px;display:flex;align-items:flex-start;gap:11px}
+.c-icon{font-size:26px;flex-shrink:0;line-height:1}
+.c-info{flex:1;min-width:0}
+.c-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.c-meta{font-size:11px;color:var(--text-soft)}
+.c-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.badge{font-size:10px;font-weight:700;padding:3px 7px;border-radius:20px;display:inline-block}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-orange{background:var(--orange-bg);color:var(--orange)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.badge-gray{background:var(--gray-light);color:var(--gray)}
+
+/* PROGRESS BAR */
+.progress-bar-wrap{height:3px;background:var(--border);margin:0 15px}
+.progress-bar{height:3px;background:var(--primary);border-radius:2px;transition:width .3s}
+
+/* EXPANDED SECTIONS */
+.section{border-top:1px solid var(--border);background:#fafafa}
+.section-hdr{padding:10px 15px 6px;font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px}
+
+/* DOCS TABLE */
+.doc-row{display:flex;align-items:center;gap:10px;padding:9px 15px;border-bottom:1px solid var(--border);background:#fff}
+.doc-row:last-child{border-bottom:none}
+.doc-status{font-size:18px;flex-shrink:0;width:22px;text-align:center}
+.doc-info{flex:1;min-width:0}
+.doc-name{font-size:13px;font-weight:600}
+.doc-sub{font-size:11px;color:var(--text-soft);margin-top:1px}
+.doc-sub.green{color:var(--green)}
+.doc-sub.red{color:var(--red);font-weight:600}
+.doc-action{flex-shrink:0}
+.doc-btn{border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer}
+.doc-btn-upload{background:var(--primary);color:#fff}
+.doc-btn-view{background:var(--gray-light);color:var(--text)}
+.doc-btn-download{background:var(--green-bg);color:var(--green)}
+
+/* PORTAL SECTION */
+.portal-section{padding:12px 15px;border-top:1px solid var(--border);background:#fff}
+.portal-title{font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.portal-card{border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.portal-card.active{border-color:var(--primary);background:#eff6ff}
+.portal-card.done{border-color:var(--green);background:var(--green-bg)}
+.portal-card.waiting{border-color:var(--orange);background:var(--orange-bg)}
+.portal-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.portal-status{font-size:12px;color:var(--text-soft);margin-bottom:8px}
+.portal-status.done{color:var(--green);font-weight:600}
+.portal-status.waiting{color:var(--orange);font-weight:600}
+.portal-actions{display:flex;gap:7px;flex-wrap:wrap}
+.portal-link{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;text-decoration:none}
+.portal-link-banmedica{background:var(--blue-bg);color:var(--blue)}
+.portal-link-bicevida{background:var(--yellow-bg);color:#92400e}
+.portal-btn-mark{background:var(--primary);color:#fff;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer}
+.portal-btn-download{background:var(--green-bg);color:var(--green);padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer}
+.portal-timestamp{font-size:10px;color:var(--text-soft);margin-top:4px}
+
+/* NOTES */
+.notes-section{padding:10px 15px;border-top:1px solid var(--border);background:#fff}
+.note-item{font-size:12px;color:var(--text-soft);padding:3px 0;display:flex;gap:6px}
+.note-item::before{content:'•';color:var(--primary)}
+.note-row{display:flex;gap:7px;margin-top:8px}
+.note-inp{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;outline:none}
+.note-inp:focus{border-color:var(--primary)}
+.note-add{background:var(--gray-light);border:none;border-radius:6px;padding:7px 11px;font-size:13px;cursor:pointer;font-weight:700}
+
+/* CARD ACTIONS */
+.card-actions{padding:9px 15px;border-top:1px solid var(--border);background:#fff;display:flex;gap:7px;justify-content:flex-end}
+.btn-adv{background:var(--primary);color:#fff;border:none;border-radius:6px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-adv:hover{background:var(--primary-dark)}
+.btn-del{background:none;color:var(--red);border:1px solid var(--red);border-radius:6px;padding:7px 11px;font-size:13px;cursor:pointer}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:720px;padding:20px;max-height:92vh;overflow-y:auto}
+@media(min-width:640px){.sheet{border-radius:20px;margin-bottom:40px}}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.sheet-title{font-size:17px;font-weight:700;margin-bottom:16px}
+.form-group{margin-bottom:13px}
+.form-label{font-size:13px;font-weight:600;color:var(--text-soft);margin-bottom:5px;display:block}
+.form-inp{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;outline:none}
+.form-inp:focus{border-color:var(--primary)}
+select.form-inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
+@media(min-width:480px){.type-grid{grid-template-columns:repeat(4,1fr)}}
+.type-opt{padding:11px 8px;border:2px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;transition:all .2s}
+.type-opt:hover,.type-opt.sel{border-color:var(--primary);background:#eff6ff}
+.type-opt-icon{font-size:22px;margin-bottom:3px}
+.type-opt-label{font-size:12px;font-weight:600}
+.person-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pchip{padding:6px 12px;border:2px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s}
+.pchip.sel{border-color:var(--primary);background:#eff6ff;color:var(--primary);font-weight:600}
+.btn-primary{width:100%;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-cancel{width:100%;background:var(--gray-light);color:var(--text);border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;margin-top:7px}
+
+/* OCR MODAL */
+.ocr-result{background:var(--gray-light);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px}
+.ocr-field{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
+.ocr-field:last-child{border-bottom:none}
+.ocr-label{font-weight:600;color:var(--text-soft);min-width:90px;font-size:12px}
+.ocr-value{color:var(--text);font-size:13px}
+.ocr-value.found{color:var(--green);font-weight:600}
+.ocr-value.not-found{color:var(--text-soft)}
+.case-match-card{border:2px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px;cursor:pointer;transition:all .2s}
+.case-match-card:hover,.case-match-card.sel{border-color:var(--primary);background:#eff6ff}
+.case-match-title{font-size:13px;font-weight:600}
+.case-match-meta{font-size:11px;color:var(--text-soft);margin-top:2px}
+
+/* FAB */
+.fab{position:fixed;bottom:22px;right:18px;width:54px;height:54px;background:var(--primary);color:#fff;border:none;border-radius:50%;font-size:26px;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.fab:hover{transform:scale(1.1)}
+
+/* TOAST */
+.toast{position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:500;display:none;box-shadow:var(--shadow-md);max-width:320px;text-align:center}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px}
+.spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:200;animation:fadeIn .2s}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.hidden{display:none!important}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:var(--text-soft)}
+.empty-icon{font-size:44px;margin-bottom:10px}
+
+/* SCAN ANIMATION */
+.scanning{display:flex;align-items:center;gap:10px;padding:12px;background:var(--blue-bg);border-radius:8px;margin-bottom:12px}
+.scan-spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+.scan-text{font-size:13px;color:var(--blue);font-weight:500}
+
+/* AMOUNT */
+.amount-big{font-size:15px;font-weight:700;color:var(--text)}
 </style>
 </head>
 <body>
-<header>
-  <h1>Reembolsos Medicos</h1>
-  <button class="btn btn-primary" id="btnNew">+ Nuevo reembolso</button>
-</header>
-<div class="stats" id="statsBar"></div>
-<div class="pipeline" id="pipeline"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
 
-<div class="overlay hidden" id="newOverlay">
-  <div class="modal">
-    <div class="modal-hd"><h2>Nuevo reembolso</h2><button class="modal-x" id="btnCloseNew">x</button></div>
-    <div class="modal-body">
-      <div class="field"><label>Descripcion *</label><input id="nName" placeholder="Ej: Consulta cardiologia"/></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field"><label>Fecha</label><input type="date" id="nDate"/></div>
-        <div class="field"><label>Monto ($)</label><input type="number" id="nAmount" placeholder="45000"/></div>
-      </div>
-      <div class="field"><label>Orden medica</label>
-        <div class="upload-box" id="boxOrden">
-          <div class="upload-inner"><span style="font-size:22px">[doc]</span><span style="font-size:12px;color:var(--muted)">Adjuntar PDF o imagen</span><span class="upload-ok hidden" id="ordenOk"></span></div>
-          <input type="file" id="fOrden" accept=".pdf,.jpg,.jpeg,.png"/>
-        </div>
-      </div>
-      <div class="field"><label>Boleta</label>
-        <div class="upload-box" id="boxBoleta">
-          <div class="upload-inner"><span style="font-size:22px">[rec]</span><span style="font-size:12px;color:var(--muted)">Adjuntar PDF o imagen</span><span class="upload-ok hidden" id="boletaOk"></span></div>
-          <input type="file" id="fBoleta" accept=".pdf,.jpg,.jpeg,.png"/>
-        </div>
-      </div>
-      <div class="field"><label>Notas</label><textarea id="nNote" placeholder="Info adicional..."></textarea></div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" id="btnCancelNew">Cancelar</button>
-      <button class="btn btn-primary" id="saveBtn">Guardar</button>
-    </div>
+<div class="hdr">
+  <h1>🏥 Reembolsos Familiares</h1>
+  <div class="hdr-sub">Calvo Mac-Lean</div>
+  <div class="hdr-stats" id="hdrStats">
+    <div class="chip">Cargando...</div>
   </div>
 </div>
 
-<div class="overlay hidden" id="detOverlay">
-  <div class="modal">
-    <div class="modal-hd"><h2 id="detTitle">Detalle</h2><button class="modal-x" id="btnCloseDet">x</button></div>
-    <div class="modal-body" id="detBody"></div>
-    <div class="modal-ft" id="detFt"></div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('activos',this)">Activos</div>
+  <div class="tab" onclick="showTab('completados',this)">Completados</div>
+</div>
+
+<div class="main">
+  <!-- Smart input -->
+  <div class="smart-bar">
+    <textarea id="smartInp" rows="2" placeholder='Ej: "Hoy fui al dentista con Almu y Aurora" o "Trini fue al kinesiólogo ayer"...'></textarea>
+    <div class="bar-row">
+      <button class="qbtn" onclick="quickAdd('dental')">🦷 Dental</button>
+      <button class="qbtn" onclick="quickAdd('kine')">💪 Kine</button>
+      <button class="qbtn" onclick="quickAdd('medico')">🏥 Médico</button>
+      <button class="qbtn" onclick="quickAdd('farmacia')">💊 Farmacia</button>
+      <button class="send-btn" onclick="processText()">Agregar →</button>
+    </div>
+  </div>
+
+  <!-- Global drop zone -->
+  <div class="global-drop" id="globalDrop" onclick="document.getElementById('fileIn').click()">
+    <div class="global-drop-text">📎 <strong>Arrastra o toca aquí para subir documentos</strong><br>
+    Detecta automáticamente: boletas, formularios, bonos, órdenes médicas</div>
+  </div>
+
+  <div id="caseList"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<button class="fab" onclick="openNewModal()" title="Nuevo caso">＋</button>
+
+<!-- Hidden inputs -->
+<input type="file" id="fileIn" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.gif" onchange="handleFileInput(event,'global')">
+<input type="file" id="docFileIn" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.gif" onchange="handleFileInput(event,'specific')">
+
+<!-- New case modal -->
+<div class="overlay" id="newModal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Nuevo reembolso</div>
+    <div class="form-group">
+      <label class="form-label">¿Quién fue?</label>
+      <div class="person-chips" id="pchips">
+        <div class="pchip" onclick="togglePerson(this,'Aurora')">👧 Aurora</div>
+        <div class="pchip" onclick="togglePerson(this,'Almudena')">👧 Almudena</div>
+        <div class="pchip" onclick="togglePerson(this,'Roberto')">👶 Roberto</div>
+        <div class="pchip" onclick="togglePerson(this,'Trini')">👩 Trini</div>
+        <div class="pchip" onclick="togglePerson(this,'Javier')">👨 Javier</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo de atención</label>
+      <div class="type-grid" id="typeGrid">
+        <div class="type-opt" onclick="selType(this,'dental')"><div class="type-opt-icon">🦷</div><div class="type-opt-label">Dental</div></div>
+        <div class="type-opt" onclick="selType(this,'kine')"><div class="type-opt-icon">💪</div><div class="type-opt-label">Kinesiología</div></div>
+        <div class="type-opt" onclick="selType(this,'medico')"><div class="type-opt-icon">🏥</div><div class="type-opt-label">Médico</div></div>
+        <div class="type-opt" onclick="selType(this,'farmacia')"><div class="type-opt-icon">💊</div><div class="type-opt-label">Farmacia</div></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fecha de atención</label>
+      <input type="date" class="form-inp" id="nDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Monto ($)</label>
+      <input type="number" class="form-inp" id="nAmount" placeholder="ej: 77350">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descripción (opcional)</label>
+      <input type="text" class="form-inp" id="nDesc" placeholder="ej: Estudio de modelos, Consulta, Sesión 1...">
+    </div>
+    <button class="btn-primary" onclick="saveNew()">Crear caso →</button>
+    <button class="btn-cancel" onclick="closeModal('newModal')">Cancelar</button>
   </div>
 </div>
+
+<!-- OCR / Assign modal -->
+<div class="overlay" id="ocrModal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="ocrTitle">Analizando documento...</div>
+    <div id="ocrBody"></div>
+  </div>
+</div>
+
+<!-- Portal action modal -->
+<div class="overlay" id="portalModal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div id="portalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
 var API = 'https://script.google.com/macros/s/AKfycbxvs_Me7KmnMvBIdvR9KibCzeDkqkloksyALGI3DbMQPBy8J7kuRJO1hFTaTQNcFIqjNg/exec';
-var STAGES = [
-  {id:'pending',   label:'Pendiente',         color:'#64748b', action:'Enviar a Banmedica'},
-  {id:'banmedica', label:'En Banmedica',       color:'#3b82f6', action:'Marcar aprobado'},
-  {id:'approved',  label:'Aprobado Banmedica', color:'#8b5cf6', action:'Enviar a Bice Vida'},
-  {id:'bicevida',  label:'En Bice Vida',       color:'#f59e0b', action:'Marcar completado'},
-  {id:'done',      label:'Completado',         color:'#22c55e', action:null}
-];
-var items = [], curDet = null, nOrd = null, nBol = null, nOrdName = '', nBolName = '';
+var FAMILY = ['Aurora','Almudena','Roberto','Trini','Javier'];
 
-function clp(n) { return '$' + Number(n).toLocaleString('es-CL'); }
-function fDate(d) {
-  if (!d) return '-';
-  try { return new Date(d + 'T12:00:00').toLocaleDateString('es-CL', {day:'2-digit',month:'2-digit',year:'numeric'}); }
-  catch(e) { return d; }
-}
-function fDT(d) {
-  if (!d) return '';
-  try { return new Date(d).toLocaleDateString('es-CL', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
-  catch(e) { return d; }
-}
-
-async function fetchAll() {
-  try {
-    var res = await fetch(API + '?action=getAll');
-    items = await res.json();
-    render();
-  } catch(e) {
-    document.getElementById('pipeline').innerHTML = '<div class="loading">Error al cargar. Recarga la pagina.</div>';
+var TYPES = {
+  dental:{icon:'🦷',label:'Dental',
+    docs:[
+      {id:'boleta',name:'Boleta',desc:'Boleta del dentista',req:true},
+      {id:'form_dental',name:'Formulario Dental Bice Vida',desc:'Parte III completada y timbrada por dentista',req:true},
+      {id:'bono_isapre',name:'Bono Isapre/Fonasa',desc:'Solo si fue bonificado previamente',req:false}
+    ],
+    workflow:[
+      {portal:'bicevida',step:'Subir a Bice Vida',docs:['boleta','form_dental'],needsFirst:null}
+    ]
+  },
+  kine:{icon:'💪',label:'Kinesiología',
+    docs:[
+      {id:'orden',name:'Orden médica',desc:'Receta del médico que derivó',req:true},
+      {id:'boleta',name:'Boleta(s)',desc:'Boletas de las sesiones de kine',req:true},
+      {id:'bono_banmedica',name:'Bono Banmédica',desc:'Descargado del portal Banmédica',req:true}
+    ],
+    workflow:[
+      {portal:'banmedica',step:'Subir orden + boleta a Banmédica',docs:['orden','boleta'],needsFirst:null},
+      {portal:'bicevida',step:'Subir bono a Bice Vida',docs:['boleta','bono_banmedica'],needsFirst:'banmedica'}
+    ]
+  },
+  medico:{icon:'🏥',label:'Médico / Especialista',
+    docs:[
+      {id:'boleta',name:'Boleta',desc:'Boleta de la consulta',req:true},
+      {id:'bono_banmedica',name:'Bono Banmédica',desc:'Descargado del portal Banmédica',req:true}
+    ],
+    workflow:[
+      {portal:'banmedica',step:'Subir boleta a Banmédica',docs:['boleta'],needsFirst:null},
+      {portal:'bicevida',step:'Subir bono a Bice Vida',docs:['boleta','bono_banmedica'],needsFirst:'banmedica'}
+    ]
+  },
+  farmacia:{icon:'💊',label:'Farmacia',
+    docs:[
+      {id:'receta',name:'Receta médica',desc:'Receta del médico',req:true},
+      {id:'boleta',name:'Boleta',desc:'Boleta de la farmacia',req:true}
+    ],
+    workflow:[
+      {portal:'bicevida',step:'Subir receta + boleta a Bice Vida',docs:['receta','boleta'],needsFirst:null}
+    ]
   }
+};
+
+var PORTALS = {
+  banmedica:{name:'Banmédica',url:'https://login.isaprebanmedica.cl/login',color:'portal-link-banmedica',emoji:'🏥',rut:'17.698.763-4'},
+  bicevida:{name:'Bice Vida',url:'https://sucursal.bicevida.cl',color:'portal-link-bicevida',emoji:'🛡️',rut:'17.698.712-k'}
+};
+
+var cases = [];
+var selPersons = [];
+var selType = null;
+var curDocCaseId = null;
+var curDocId = null;
+var pendingFile = null;
+var activeTab = 'activos';
+
+// ── INIT ──────────────────────────────────────────────
+function init() {
+  var d = new Date();
+  document.getElementById('nDate').value = fmtDateInput(d);
+  setupDrop();
+  loadCases();
 }
 
-async function postData(data) {
-  try { await fetch(API, {method:'POST', mode:'no-cors', body:JSON.stringify(data)}); } catch(e) {}
-  await new Promise(function(r){ setTimeout(r, 1800); });
-  await fetchAll();
+function setupDrop() {
+  var zone = document.getElementById('globalDrop');
+  zone.addEventListener('dragover', function(e){e.preventDefault();zone.classList.add('over');});
+  zone.addEventListener('dragleave', function(){zone.classList.remove('over');});
+  zone.addEventListener('drop', function(e){
+    e.preventDefault();zone.classList.remove('over');
+    if(e.dataTransfer.files[0]) processDroppedFile(e.dataTransfer.files[0]);
+  });
+  // Full-page drag
+  document.addEventListener('dragover',function(e){e.preventDefault();});
+  document.addEventListener('drop',function(e){
+    e.preventDefault();
+    if(e.target !== zone && e.dataTransfer.files[0]) processDroppedFile(e.dataTransfer.files[0]);
+  });
 }
 
-function render() { renderStats(); renderPipeline(); }
-
-function renderStats() {
-  var total = items.length;
-  var done = items.filter(function(i){ return i.stage === 'done'; }).length;
-  var inProg = items.filter(function(i){ return i.stage !== 'done' && i.stage !== 'pending'; }).length;
-  var amt = items.reduce(function(s,i){ return s + (Number(i.amount)||0); }, 0);
-  var html = '<div class="stat"><span class="stat-value">' + total + '</span><span class="stat-label">Total</span></div>';
-  html += '<div class="stat"><span class="stat-value" style="color:#3b82f6">' + inProg + '</span><span class="stat-label">En tramite</span></div>';
-  html += '<div class="stat"><span class="stat-value" style="color:#22c55e">' + done + '</span><span class="stat-label">Completados</span></div>';
-  html += '<div class="stat"><span class="stat-value" style="color:#8b5cf6">' + (amt ? clp(amt) : '-') + '</span><span class="stat-label">Monto total</span></div>';
-  document.getElementById('statsBar').innerHTML = html;
+function fmtDateInput(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
-function renderPipeline() {
+// ── LOAD DATA ─────────────────────────────────────────
+function loadCases() {
+  fetch(API).then(function(r){return r.json();}).then(function(data){
+    cases = (data.items||data||[]).map(migrateCase);
+    renderAll();
+  }).catch(function(){
+    cases = JSON.parse(localStorage.getItem('rf_v3')||'[]');
+    renderAll();
+  });
+}
+
+function migrateCase(item) {
+  if(!item.type) item.type = guessType(item.description||'');
+  if(!item.docs) item.docs = {};
+  if(!item.portalStatus) item.portalStatus = {};
+  if(!item.stage2) item.stage2 = mapStage(item.stage,item.type);
+  // Migrate old doc flags
+  if(item.fOrden==='ok' && !item.docs.orden) item.docs.orden={name:'orden_medica',uploaded:true,date:item.date};
+  if(item.fBoleta==='ok' && !item.docs.boleta) item.docs.boleta={name:'boleta',uploaded:true,date:item.date};
+  if(!item.notes) item.notes=[];
+  return item;
+}
+
+function guessType(desc) {
+  var d=(desc||'').toLowerCase();
+  if(d.includes('dent')||d.includes('ortod')||d.includes('modelo')) return 'dental';
+  if(d.includes('kine')||d.includes('fisio')) return 'kine';
+  if(d.includes('farmac')||d.includes('medicam')||d.includes('remedio')) return 'farmacia';
+  return 'medico';
+}
+
+function mapStage(s,type) {
+  if(!s||s==='pending') return 'pendiente';
+  if(s==='done') return 'completado';
+  if(s==='bicevida') return 'bv_enviado';
+  if(s==='banmedica') return 'bm_enviado';
+  if(s==='approved') return 'bm_aprobado';
+  return 'pendiente';
+}
+
+// ── RENDER ────────────────────────────────────────────
+function renderAll() {
+  var active = cases.filter(function(c){return c.stage2!=='completado';});
+  var done   = cases.filter(function(c){return c.stage2==='completado';});
+
+  // Header stats
+  var missing = active.filter(function(c){return missingCount(c)>0;}).length;
+  var ready   = active.filter(function(c){return missingCount(c)===0 && c.stage2==='pendiente';}).length;
   var html = '';
-  for (var si = 0; si < STAGES.length; si++) {
-    var s = STAGES[si];
-    var cards = items.filter(function(i){ return i.stage === s.id; });
-    html += '<div class="column">';
-    html += '<div class="col-hd"><div class="col-title"><span class="stage-dot" style="background:' + s.color + '"></span>' + s.label + '</div><span class="badge">' + cards.length + '</span></div>';
-    html += '<div class="col-cards">';
-    if (cards.length) {
-      for (var ci = 0; ci < cards.length; ci++) { html += cardHtml(cards[ci], s); }
-    } else {
-      html += '<div class="empty">Sin reembolsos</div>';
-    }
-    html += '</div></div>';
+  if(missing) html += '<div class="chip chip-red">⚠️ '+missing+' falta doc</div>';
+  if(ready)   html += '<div class="chip chip-orange">📤 '+ready+' listos</div>';
+  html += '<div class="chip">📋 '+active.length+' activos</div>';
+  if(done.length) html += '<div class="chip chip-green">✅ '+done.length+' completos</div>';
+  document.getElementById('hdrStats').innerHTML = html;
+
+  var list = activeTab==='activos' ? active : done;
+  var el = document.getElementById('caseList');
+  if(!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">'+(activeTab==='activos'?'🎉':'📁')+'</div><b>'+(activeTab==='activos'?'¡Todo al día!':'Sin completados')+'</b></div>';
+    return;
   }
-  document.getElementById('pipeline').innerHTML = html;
-  bindCardEvents();
+  el.innerHTML = list.map(renderCard).join('');
 }
 
-function cardHtml(item, stage) {
-  var hasOrd = item.ordenUrl, hasBol = item.boletaUrl;
-  var html = '<div class="card" data-id="' + item.id + '" data-action="open">';
-  html += '<div class="card-top"><span class="card-name">' + item.name + '</span>';
-  if (item.amount) html += '<span class="card-amount">' + clp(item.amount) + '</span>';
-  html += '</div><div class="card-date">' + fDate(item.date) + '</div>';
-  html += '<div class="card-docs">';
-  html += '<span class="chip ' + (hasOrd ? 'chip-ok' : 'chip-miss') + '">' + (hasOrd ? 'OK' : '!') + ' Orden</span>';
-  html += '<span class="chip ' + (hasBol ? 'chip-ok' : 'chip-miss') + '">' + (hasBol ? 'OK' : '!') + ' Boleta</span>';
+function missingCount(c) {
+  var t=TYPES[c.type||'medico'];
+  return t.docs.filter(function(d){return d.req && !(c.docs&&c.docs[d.id]&&c.docs[d.id].uploaded);}).length;
+}
+
+function getProgress(c) {
+  var t=TYPES[c.type||'medico'];
+  var total=t.docs.filter(function(d){return d.req;}).length;
+  var done=t.docs.filter(function(d){return d.req&&c.docs&&c.docs[d.id]&&c.docs[d.id].uploaded;}).length;
+  return total>0 ? Math.round((done/total)*100) : 0;
+}
+
+function renderCard(c) {
+  var t = TYPES[c.type||'medico'];
+  var miss = missingCount(c);
+  var prog = getProgress(c);
+  var exp = c._expanded;
+
+  var statusBadge = '';
+  if(c.stage2==='completado') statusBadge='<span class="badge badge-green">✅ Completado</span>';
+  else if(miss>0) statusBadge='<span class="badge badge-red">⚠️ '+miss+' falta'+(miss>1?'n':'')+'</span>';
+  else if(prog===100) statusBadge='<span class="badge badge-orange">📤 Listo para enviar</span>';
+
+  var workflowBadge = getWorkflowBadge(c);
+
+  var html = '<div class="card" id="card-'+c.id+'">';
+  html += '<div class="card-hdr" onclick="toggleCard(\''+c.id+'\')">';
+  html += '<div class="c-icon">'+t.icon+'</div>';
+  html += '<div class="c-info">';
+  html += '<div class="c-title">'+(c.description||'Sin nombre')+'</div>';
+  html += '<div class="c-meta">'+fmtDate(c.date)+(c.amount?' · $'+Number(c.amount).toLocaleString('es-CL'):'')+' · '+t.label+'</div>';
   html += '</div>';
-  if (item.latestNote) html += '<div class="card-note">' + item.latestNote + '</div>';
-  html += '<div class="card-actions">';
-  if (stage.action) html += '<button class="btn-adv" data-id="' + item.id + '" data-action="adv">' + stage.action + ' &rarr;</button>';
-  html += '<button class="btn-del" data-id="' + item.id + '" data-action="del">Eliminar</button>';
-  html += '</div></div>';
+  html += '<div class="c-right">'+statusBadge+(workflowBadge?workflowBadge:'')+'</div>';
+  html += '</div>';
+
+  // Progress bar
+  html += '<div class="progress-bar-wrap"><div class="progress-bar" style="width:'+prog+'%"></div></div>';
+
+  if(exp) {
+    // DOCUMENTS section
+    html += '<div class="section">';
+    html += '<div class="section-hdr">📄 Documentos requeridos</div>';
+    t.docs.forEach(function(doc){
+      var uploaded = c.docs&&c.docs[doc.id]&&c.docs[doc.id].uploaded;
+      var fileInfo  = uploaded ? c.docs[doc.id] : null;
+      html += '<div class="doc-row">';
+      html += '<div class="doc-status">'+(uploaded?'✅':(doc.req?'🔴':'🟡'))+'</div>';
+      html += '<div class="doc-info"><div class="doc-name">'+doc.name+(doc.req?'':' <span style="color:#9ca3af;font-size:10px">(opcional)</span>')+'</div>';
+      if(uploaded && fileInfo) html += '<div class="doc-sub green">📄 '+fileInfo.name+(fileInfo.date?' · '+fmtDate(fileInfo.date):'')+'</div>';
+      else html += '<div class="doc-sub red">'+doc.desc+'</div>';
+      html += '</div>';
+      html += '<div class="doc-action">';
+      if(uploaded) html += '<button class="doc-btn doc-btn-view" onclick="event.stopPropagation()">Ver</button>';
+      html += '<button class="doc-btn doc-btn-upload" onclick="event.stopPropagation();triggerDoc(\''+c.id+'\',\''+doc.id+'\')">'+(!uploaded?'📎 Subir':'↺ Reemplazar')+'</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    // PORTAL WORKFLOW section
+    html += renderPortalSection(c);
+
+    // NOTES
+    var notes = c.notes||[];
+    html += '<div class="notes-section">';
+    if(notes.length) {
+      html += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Notas</div>';
+      notes.forEach(function(n){ html += '<div class="note-item">'+n+'</div>'; });
+    }
+    html += '<div class="note-row"><input class="note-inp" id="ni-'+c.id+'" placeholder="Agregar nota..." onkeydown="if(event.keyCode===13){event.preventDefault();addNote(\''+c.id+'\');}"><button class="note-add" onclick="event.stopPropagation();addNote(\''+c.id+'\')">+</button></div>';
+    html += '</div>';
+
+    // CARD ACTIONS
+    html += '<div class="card-actions">';
+    html += '<button class="btn-del" onclick="event.stopPropagation();delCase(\''+c.id+'\')">Eliminar</button>';
+    if(c.stage2!=='completado') html += '<button class="btn-adv" onclick="event.stopPropagation();markComplete(\''+c.id+'\')">✅ Marcar completado</button>';
+    html += '</div>';
+  }
+
+  html += '</div>';
   return html;
 }
 
-function bindCardEvents() {
-  document.getElementById('pipeline').onclick = function(e) {
-    var btn = e.target.closest('[data-action]');
-    if (!btn) return;
-    var id = btn.getAttribute('data-id');
-    var action = btn.getAttribute('data-action');
-    if (action === 'open') openDet(id);
-    else if (action === 'adv') { e.stopPropagation(); advance(id); }
-    else if (action === 'del') { e.stopPropagation(); del(id); }
-  };
-}
-
-async function advance(id) {
-  var item = items.find(function(i){ return i.id == id; });
-  if (!item) return;
-  var idx = STAGES.findIndex(function(s){ return s.id === item.stage; });
-  if (idx < STAGES.length - 1) {
-    var newStage = STAGES[idx + 1].id;
-    var history = (item.history || []).concat([{stage: newStage, date: new Date().toISOString(), note:''}]);
-    showToast('Actualizando...');
-    await postData({action:'update', id: item.id, stage: newStage, history: history});
-    showToast('Actualizado!');
-  }
-}
-
-async function del(id) {
-  if (!confirm('Eliminar este reembolso?')) return;
-  showToast('Eliminando...');
-  await postData({action:'delete', id: id});
-  showToast('Eliminado');
-}
-
-function openNew() {
-  ['nName','nDate','nAmount','nNote'].forEach(function(id){ document.getElementById(id).value = ''; });
-  nOrd = nBol = null; nOrdName = nBolName = '';
-  ['ordenOk','boletaOk'].forEach(function(id){
-    var el = document.getElementById(id); el.textContent = ''; el.classList.add('hidden');
+function getWorkflowBadge(c) {
+  var ps = c.portalStatus||{};
+  var t  = TYPES[c.type||'medico'];
+  var last = '';
+  t.workflow.forEach(function(w){
+    if(ps[w.portal]&&ps[w.portal].submitted) last = w.portal;
   });
-  document.getElementById('fOrden').value = '';
-  document.getElementById('fBoleta').value = '';
-  document.getElementById('newOverlay').classList.remove('hidden');
-}
-function closeNew() { document.getElementById('newOverlay').classList.add('hidden'); }
-
-function onFile(type, file) {
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    if (type === 'orden') { nOrd = e.target.result; nOrdName = file.name; }
-    else { nBol = e.target.result; nBolName = file.name; }
-    var ok = document.getElementById(type === 'orden' ? 'ordenOk' : 'boletaOk');
-    ok.textContent = 'OK: ' + file.name; ok.classList.remove('hidden');
-  };
-  reader.readAsDataURL(file);
+  if(!last) return '';
+  var p = PORTALS[last];
+  return '<span class="badge badge-blue">'+p.emoji+' En '+p.name+'</span>';
 }
 
-async function saveNew() {
-  var name = document.getElementById('nName').value.trim();
-  if (!name) { alert('Ingresa una descripcion'); return; }
-  var id = Date.now().toString();
-  var btn = document.getElementById('saveBtn');
-  btn.textContent = 'Guardando...'; btn.disabled = true;
-  await postData({action:'create', id:id, name:name,
-    date: document.getElementById('nDate').value,
-    amount: document.getElementById('nAmount').value,
-    latestNote: document.getElementById('nNote').value.trim()
+function renderPortalSection(c) {
+  var t  = TYPES[c.type||'medico'];
+  var ps = c.portalStatus||{};
+  var miss = missingCount(c);
+  var html = '<div class="portal-section">';
+  html += '<div class="portal-title">🌐 Portales de salud</div>';
+
+  t.workflow.forEach(function(w){
+    var p = PORTALS[w.portal];
+    var pst = ps[w.portal]||{};
+    var blockedBy = w.needsFirst && !(ps[w.needsFirst]&&ps[w.needsFirst].submitted);
+    var docsMissing = miss>0;
+    var isSubmitted = pst.submitted;
+    var hasBono = pst.bono_downloaded;
+
+    var cardClass = isSubmitted ? (hasBono?'done':'waiting') : (docsMissing||blockedBy?'':'active');
+    html += '<div class="portal-card '+cardClass+'">';
+    html += '<div class="portal-name">'+p.emoji+' '+p.name+'</div>';
+
+    if(isSubmitted) {
+      html += '<div class="portal-status '+(hasBono?'done':'waiting')+'">'+
+        (hasBono ? '✅ Completado — bono descargado '+fmtDate(pst.bono_date)
+                 : '⏳ Enviado el '+fmtDate(pst.submit_date)+' — esperando respuesta')+'</div>';
+    } else if(blockedBy) {
+      html += '<div class="portal-status">🔒 Primero completa '+PORTALS[w.needsFirst].name+'</div>';
+    } else if(docsMissing) {
+      html += '<div class="portal-status">⚠️ Faltan documentos para poder enviar</div>';
+    } else {
+      html += '<div class="portal-status">✅ Documentos listos para enviar</div>';
+    }
+
+    // What docs to upload to this portal
+    if(!isSubmitted && !blockedBy) {
+      html += '<div style="font-size:11px;color:var(--text-soft);margin:5px 0;">Debes subir: ';
+      html += w.docs.map(function(did){
+        var dd = t.docs.find(function(x){return x.id===did;});
+        var ok = c.docs&&c.docs[did]&&c.docs[did].uploaded;
+        return '<span style="color:'+(ok?'var(--green)':'var(--red)');+'">'+(ok?'✅ ':'❌ ')+(dd?dd.name:did)+'</span>';
+      }).join(', ');
+      html += '</div>';
+    }
+
+    html += '<div class="portal-actions">';
+    html += '<a href="'+p.url+'" target="_blank" class="portal-link '+p.color+'" onclick="event.stopPropagation()">'+p.emoji+' Abrir '+p.name+'</a>';
+    if(!isSubmitted && !blockedBy && !docsMissing) {
+      html += '<button class="portal-btn-mark" onclick="event.stopPropagation();markSubmitted(\''+c.id+'\',\''+w.portal+'\')">📤 Marcar como enviado</button>';
+    }
+    if(isSubmitted && !hasBono) {
+      html += '<button class="portal-btn-download" onclick="event.stopPropagation();triggerDocPortal(\''+c.id+'\',\''+w.portal+'\')">⬇️ Subir bono descargado</button>';
+    }
+    html += '</div>';
+    if(isSubmitted) html += '<div class="portal-timestamp">Enviado: '+fmtDate(pst.submit_date)+(hasBono?' · Bono: '+fmtDate(pst.bono_date):'')+'</div>';
+    html += '</div>';
   });
-  if (nOrd) { showToast('Subiendo orden...'); await postData({action:'uploadFile', itemId:id, fileType:'orden', fileData:nOrd, fileName:nOrdName, mimeType:nOrd.split(';')[0].split(':')[1]}); }
-  if (nBol) { showToast('Subiendo boleta...'); await postData({action:'uploadFile', itemId:id, fileType:'boleta', fileData:nBol, fileName:nBolName, mimeType:nBol.split(';')[0].split(':')[1]}); }
-  btn.textContent = 'Guardar'; btn.disabled = false;
-  closeNew(); showToast('Reembolso creado!');
+
+  html += '</div>';
+  return html;
 }
 
-function openDet(id) {
-  var item = items.find(function(i){ return i.id == id; });
-  if (!item) return;
-  curDet = id;
-  var stage = STAGES.find(function(s){ return s.id === item.stage; });
-  document.getElementById('detTitle').textContent = item.name;
-  var tlHtml = '';
-  var hist = item.history || [];
-  for (var hi = 0; hi < hist.length; hi++) {
-    var h = hist[hi];
-    var s = STAGES.find(function(x){ return x.id === h.stage; });
-    tlHtml += '<div class="tl-item"><div class="tl-l"><div class="tl-dot" style="background:' + (s ? s.color : '#ccc') + '"></div>';
-    if (hi < hist.length - 1) tlHtml += '<div class="tl-line"></div>';
-    tlHtml += '</div><div class="tl-r"><div class="tl-title">' + (s ? s.label : h.stage) + '</div>';
-    tlHtml += '<div class="tl-date">' + fDT(h.date) + '</div>';
-    if (h.note) tlHtml += '<div class="tl-note">' + h.note + '</div>';
-    tlHtml += '</div></div>';
+// ── FILE HANDLING & OCR ───────────────────────────────
+function handleFileInput(event, mode) {
+  var file = event.target.files[0];
+  if(!file) return;
+  event.target.value = '';
+  if(mode==='global') processDroppedFile(file);
+  else if(mode==='specific') assignDocToCase(file, curDocCaseId, curDocId);
+}
+
+function processDroppedFile(file) {
+  pendingFile = file;
+  var name = file.name.toLowerCase();
+
+  // Show OCR modal with scanning animation
+  document.getElementById('ocrTitle').textContent = '📄 Leyendo: '+file.name;
+  document.getElementById('ocrBody').innerHTML = '<div class="scanning"><div class="scan-spinner"></div><div class="scan-text">Extrayendo información del documento...</div></div>';
+  document.getElementById('ocrModal').classList.add('open');
+
+  extractDocInfo(file).then(function(info){
+    showOcrResult(info, file);
+  });
+}
+
+function extractDocInfo(file) {
+  return new Promise(function(resolve){
+    var name = file.name.toLowerCase();
+    var type = file.type;
+
+    // Guess from filename first
+    var result = guessFromFilename(file.name);
+
+    if(type==='application/pdf') {
+      var fr = new FileReader();
+      fr.onload = function(e){
+        pdfjsLib.getDocument({data: e.target.result}).promise.then(function(pdf){
+          var pages = [];
+          var promises = [];
+          for(var i=1;i<=Math.min(pdf.numPages,3);i++){
+            promises.push(pdf.getPage(i).then(function(page){
+              return page.getTextContent().then(function(tc){
+                return tc.items.map(function(x){return x.str;}).join(' ');
+              });
+            }));
+          }
+          Promise.all(promises).then(function(texts){
+            var fullText = texts.join(' ');
+            var parsed = parseDocumentText(fullText, result);
+            resolve(parsed);
+          });
+        }).catch(function(){ resolve(result); });
+      };
+      fr.readAsArrayBuffer(file);
+    } else {
+      // Image: guess from filename only
+      setTimeout(function(){resolve(result);}, 600);
+    }
+  });
+}
+
+function guessFromFilename(filename) {
+  var n = filename.toLowerCase();
+  var result = {docType:null, person:null, amount:null, date:null, provider:null, raw:filename};
+
+  if(n.includes('boleta')) result.docType='boleta';
+  else if(n.includes('formulario')||n.includes('solicitud')||n.includes('dental')) result.docType='form_dental';
+  else if(n.includes('orden')||n.includes('receta')) result.docType='orden';
+  else if(n.includes('bono')||n.includes('bonificacion')) result.docType='bono_banmedica';
+
+  FAMILY.forEach(function(p){
+    if(n.includes(p.toLowerCase())) result.person=p;
+  });
+  if(n.includes('almu')&&!result.person) result.person='Almudena';
+  if(n.includes('auro')&&!result.person) result.person='Aurora';
+
+  return result;
+}
+
+function parseDocumentText(text, prev) {
+  var result = Object.assign({}, prev, {rawText: text.substring(0,500)});
+
+  // Extract amount
+  var amtMatch = text.match(/\$\s*([\d.,]+)/);
+  if(!amtMatch) amtMatch = text.match(/total[^\d]*([\d.,]+)/i);
+  if(amtMatch) {
+    result.amount = amtMatch[1].replace(/\./g,'').replace(',','');
   }
-  var bodyHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">';
-  bodyHtml += '<span class="chip chip-neu">' + fDate(item.date) + '</span>';
-  if (item.amount) bodyHtml += '<span class="chip chip-neu">' + clp(item.amount) + '</span>';
-  bodyHtml += '<span class="chip" style="background:' + stage.color + '18;border:1px solid ' + stage.color + '44;color:' + stage.color + '">' + stage.label + '</span></div>';
-  bodyHtml += '<div style="margin-top:14px"><div class="sec-title" style="margin-bottom:8px">Documentos</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
-  bodyHtml += (item.ordenUrl ? '<a href="' + item.ordenUrl + '" target="_blank" class="btn btn-ghost btn-sm">Orden medica</a>' : '<span class="chip chip-miss">Orden pendiente</span>');
-  bodyHtml += (item.boletaUrl ? '<a href="' + item.boletaUrl + '" target="_blank" class="btn btn-ghost btn-sm">Boleta</a>' : '<span class="chip chip-miss">Boleta pendiente</span>');
-  bodyHtml += '</div></div>';
-  if (item.latestNote) bodyHtml += '<div class="card-note" style="margin-top:12px">' + item.latestNote + '</div>';
-  bodyHtml += '<div style="margin-top:16px"><div class="sec-title" style="margin-bottom:8px">Historial</div><div class="tl">' + (tlHtml || 'Sin historial') + '</div></div>';
-  bodyHtml += '<div style="margin-top:16px"><div class="sec-title" style="margin-bottom:6px">Agregar nota</div>';
-  bodyHtml += '<div class="note-row"><input type="text" id="noteInp" placeholder="Observacion..."/><button class="btn btn-primary btn-sm" id="btnAddNote">Agregar</button></div></div>';
-  document.getElementById('detBody').innerHTML = bodyHtml;
-  document.getElementById('noteInp').addEventListener('keydown', function(e){ if (e.keyCode === 13) addNote(); });
-  document.getElementById('btnAddNote').addEventListener('click', addNote);
-  var btnsHtml = '';
-  if (stage.action) btnsHtml += '<button class="btn btn-primary" id="btnDetAdv">' + stage.action + ' &rarr;</button>';
-  btnsHtml += '<button class="btn btn-ghost" id="btnDetClose">Cerrar</button>';
-  document.getElementById('detFt').innerHTML = btnsHtml;
-  if (stage.action) document.getElementById('btnDetAdv').addEventListener('click', function(){ advance(id); closeDet(); });
-  document.getElementById('btnDetClose').addEventListener('click', closeDet);
-  document.getElementById('detOverlay').classList.remove('hidden');
+
+  // Extract date
+  var dateMatch = text.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{4}|\d{2})/);
+  if(!dateMatch) dateMatch = text.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+  if(dateMatch) result.date = dateMatch[0];
+
+  // Extract name from boleta text
+  FAMILY.forEach(function(p){
+    if(text.toLowerCase().includes(p.toLowerCase()) && !result.person) result.person=p;
+  });
+
+  // Doc type from text content
+  if(!result.docType) {
+    var t = text.toLowerCase();
+    if(t.includes('boleta')) result.docType='boleta';
+    else if(t.includes('solicitud de reembolso')||t.includes('formulario dental')||t.includes('odontologo')) result.docType='form_dental';
+    else if(t.includes('orden medica')||t.includes('derivacion')) result.docType='orden';
+    else if(t.includes('bono')||t.includes('bonificacion')) result.docType='bono_banmedica';
+    else if(t.includes('receta')) result.docType='receta';
+  }
+
+  // Provider
+  var provMatch = text.match(/sociedad|clinica|centro medico|dr\.|dra\.|kinesiologo/i);
+  if(provMatch) {
+    var idx = text.indexOf(provMatch[0]);
+    result.provider = text.substring(idx, idx+50).trim();
+  }
+
+  return result;
 }
 
-function closeDet() { document.getElementById('detOverlay').classList.add('hidden'); curDet = null; }
+function showOcrResult(info, file) {
+  var DOC_LABELS = {
+    boleta:'Boleta / Factura',form_dental:'Formulario Dental Bice Vida',
+    orden:'Orden Médica',bono_banmedica:'Bono Banmédica',receta:'Receta Médica',
+    bono_isapre:'Bono Isapre/Fonasa'
+  };
 
-async function addNote() {
-  var inp = document.getElementById('noteInp');
-  var note = inp.value.trim();
-  if (!note || !curDet) return;
-  var item = items.find(function(i){ return i.id == curDet; });
-  if (!item) return;
-  var history = (item.history || []).concat([{stage: item.stage, date: new Date().toISOString(), note: note}]);
-  showToast('Guardando nota...');
-  await postData({action:'update', id:curDet, latestNote:note, history:history});
-  openDet(curDet);
+  var html = '';
+  html += '<div class="ocr-result">';
+  html += '<div class="ocr-field"><span class="ocr-label">Tipo doc</span><span class="ocr-value '+(info.docType?'found':'not-found')+'">'+( info.docType ? DOC_LABELS[info.docType]||info.docType : '❓ No detectado')+'</span></div>';
+  html += '<div class="ocr-field"><span class="ocr-label">Paciente</span><span class="ocr-value '+(info.person?'found':'not-found')+'">'+(info.person||'❓ No detectado')+'</span></div>';
+  html += '<div class="ocr-field"><span class="ocr-label">Monto</span><span class="ocr-value '+(info.amount?'found':'not-found')+'">'+(info.amount?'$'+Number(info.amount).toLocaleString('es-CL'):'❓ No detectado')+'</span></div>';
+  html += '<div class="ocr-field"><span class="ocr-label">Fecha</span><span class="ocr-value '+(info.date?'found':'not-found')+'">'+(info.date||'❓ No detectado')+'</span></div>';
+  if(info.provider) html += '<div class="ocr-field"><span class="ocr-label">Prestador</span><span class="ocr-value found">'+info.provider.substring(0,40)+'</span></div>';
+  html += '</div>';
+
+  // Find matching cases
+  var matches = findMatchingCases(info);
+  if(matches.length) {
+    html += '<div class="form-label" style="margin-bottom:8px">Asignar a caso existente:</div>';
+    matches.forEach(function(m){
+      html += '<div class="case-match-card" onclick="confirmAssign(this,\''+m.c.id+'\',\''+info.docType+'\')">';
+      html += '<div class="case-match-title">'+TYPES[m.c.type||'medico'].icon+' '+m.c.description+'</div>';
+      html += '<div class="case-match-meta">'+fmtDate(m.c.date)+(m.c.amount?' · $'+Number(m.c.amount).toLocaleString('es-CL'):'')+(m.score>=80?' · <span style="color:var(--green);font-weight:600">Coincidencia alta</span>':'')+'</div>';
+      html += '</div>';
+    });
+  }
+
+  html += '<div class="form-label" style="margin-bottom:8px;margin-top:12px">O crear nuevo caso:</div>';
+  html += '<button class="btn-primary" onclick="createFromOcr('+JSON.stringify(info).replace(/"/g,"'")+')">➕ Crear nuevo caso</button>';
+  html += '<button class="btn-cancel" onclick="closeModal(\'ocrModal\')">Cancelar</button>';
+
+  document.getElementById('ocrTitle').textContent = '📄 '+file.name;
+  document.getElementById('ocrBody').innerHTML = html;
 }
 
-function showToast(msg) {
-  var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
-  document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2500);
+function findMatchingCases(info) {
+  var scored = cases.filter(function(c){return c.stage2!=='completado';}).map(function(c){
+    var score = 0;
+    if(info.person && c.description && c.description.toLowerCase().includes(info.person.toLowerCase())) score += 50;
+    if(info.docType && TYPES[c.type||'medico'].docs.find(function(d){return d.id===info.docType;})) score += 30;
+    if(info.date && c.date) {
+      var d1=new Date(info.date), d2=new Date(c.date);
+      if(!isNaN(d1)&&!isNaN(d2)&&Math.abs(d1-d2)<7*86400000) score+=20;
+    }
+    return {c:c, score:score};
+  }).filter(function(x){return x.score>=30;}).sort(function(a,b){return b.score-a.score;});
+  return scored.slice(0,3);
 }
 
-document.getElementById('btnNew').addEventListener('click', openNew);
-document.getElementById('btnCloseNew').addEventListener('click', closeNew);
-document.getElementById('btnCancelNew').addEventListener('click', closeNew);
-document.getElementById('saveBtn').addEventListener('click', saveNew);
-document.getElementById('btnCloseDet').addEventListener('click', closeDet);
-document.getElementById('boxOrden').addEventListener('click', function(){ document.getElementById('fOrden').click(); });
-document.getElementById('boxBoleta').addEventListener('click', function(){ document.getElementById('fBoleta').click(); });
-document.getElementById('fOrden').addEventListener('change', function(){ onFile('orden', this.files[0]); });
-document.getElementById('fBoleta').addEventListener('change', function(){ onFile('boleta', this.files[0]); });
-document.getElementById('newOverlay').addEventListener('click', function(e){ if (e.target === e.currentTarget) closeNew(); });
-document.getElementById('detOverlay').addEventListener('click', function(e){ if (e.target === e.currentTarget) closeDet(); });
+function confirmAssign(el, caseId, docType) {
+  document.querySelectorAll('.case-match-card').forEach(function(x){x.classList.remove('sel');});
+  el.classList.add('sel');
+  // Find the right docId for this case
+  var c = cases.find(function(x){return x.id==caseId;});
+  var docId = docType || 'boleta';
+  assignDocToCase(pendingFile, caseId, docId, true);
+}
 
-fetchAll();
+function createFromOcr(info) {
+  var type = guessTypeFromDocType(info.docType);
+  var person = info.person || '?';
+  var t = TYPES[type];
+  var newCase = {
+    id: Date.now(),
+    description: person + ' - ' + t.label,
+    type: type,
+    date: normalizeDate(info.date) || fmtDateInput(new Date()),
+    amount: info.amount || '',
+    stage2: 'pendiente',
+    docs: {},
+    portalStatus: {},
+    notes: ['Creado automáticamente desde documento']
+  };
+  // Assign the doc
+  if(info.docType && pendingFile) {
+    newCase.docs[info.docType] = {name:pendingFile.name, uploaded:true, date:new Date().toISOString()};
+  }
+  cases.unshift(newCase);
+  saveToAPI({action:'add',item:{id:newCase.id,description:newCase.description,date:newCase.date,amount:newCase.amount,type:newCase.type,stage:'pending',notes:newCase.notes}});
+  closeModal('ocrModal');
+  renderAll();
+  showToast('✅ Caso creado: '+newCase.description);
+}
+
+function guessTypeFromDocType(docType) {
+  if(docType==='form_dental'||docType==='bono_isapre') return 'dental';
+  if(docType==='orden') return 'kine';
+  if(docType==='receta') return 'farmacia';
+  return 'medico';
+}
+
+function normalizeDate(str) {
+  if(!str) return null;
+  var m = str.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+  if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  m = str.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  return null;
+}
+
+function assignDocToCase(file, caseId, docId, fromModal) {
+  var c = cases.find(function(x){return x.id==caseId;});
+  if(!c) return;
+  if(!c.docs) c.docs = {};
+  c.docs[docId] = {name:file.name, uploaded:true, date:new Date().toISOString(), size:file.size};
+  saveToAPI({action:'updateDoc',id:caseId,docId:docId,fileName:file.name});
+  if(fromModal) closeModal('ocrModal');
+  renderAll();
+  showToast('✅ Documento asignado a: '+c.description);
+}
+
+// ── PORTAL ACTIONS ────────────────────────────────────
+function markSubmitted(caseId, portal) {
+  var c = cases.find(function(x){return x.id==caseId;});
+  if(!c) return;
+  if(!c.portalStatus) c.portalStatus={};
+  c.portalStatus[portal] = {submitted:true, submit_date:new Date().toISOString()};
+  saveToAPI({action:'updatePortal',id:caseId,portal:portal,status:'submitted'});
+  renderAll();
+  showToast('📤 Marcado como enviado a '+PORTALS[portal].name);
+}
+
+function triggerDocPortal(caseId, portal) {
+  curDocCaseId = caseId;
+  curDocId = 'bono_'+portal.replace('banmedica','banmedica').replace('bicevida','bicevida');
+  // Custom handler for portal bonos
+  window._pendingPortal = portal;
+  document.getElementById('docFileIn').onchange = function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    e.target.value='';
+    var c = cases.find(function(x){return x.id==curDocCaseId;});
+    if(!c) return;
+    if(!c.docs) c.docs={};
+    if(!c.portalStatus) c.portalStatus={};
+    var docKey = 'bono_'+window._pendingPortal;
+    c.docs[docKey]={name:file.name,uploaded:true,date:new Date().toISOString()};
+    c.portalStatus[window._pendingPortal].bono_downloaded=true;
+    c.portalStatus[window._pendingPortal].bono_date=new Date().toISOString();
+    saveToAPI({action:'updateDoc',id:curDocCaseId,docId:docKey,fileName:file.name});
+    renderAll();
+    showToast('⬇️ Bono guardado: '+file.name);
+  };
+  document.getElementById('docFileIn').click();
+}
+
+// ── CASE MANAGEMENT ───────────────────────────────────
+function toggleCard(id) {
+  cases.forEach(function(c){if(c.id==id) c._expanded=!c._expanded;});
+  renderAll();
+}
+
+function markComplete(id) {
+  var c = cases.find(function(x){return x.id==id;});
+  if(c){c.stage2='completado';saveToAPI({action:'advance',id:id,stage:'done'});renderAll();showToast('✅ Caso completado');}
+}
+
+function delCase(id) {
+  if(!confirm('¿Eliminar este caso?')) return;
+  cases = cases.filter(function(c){return c.id!=id;});
+  saveToAPI({action:'delete',id:id});
+  renderAll();
+  showToast('🗑️ Eliminado');
+}
+
+function addNote(caseId) {
+  var inp = document.getElementById('ni-'+caseId);
+  if(!inp||!inp.value.trim()) return;
+  var c = cases.find(function(x){return x.id==caseId;});
+  if(!c) return;
+  if(!c.notes) c.notes=[];
+  c.notes.push(inp.value.trim());
+  saveToAPI({action:'addNote',id:caseId,note:inp.value.trim()});
+  renderAll();
+}
+
+function triggerDoc(caseId, docId) {
+  curDocCaseId = caseId;
+  curDocId = docId;
+  document.getElementById('docFileIn').onchange = function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    e.target.value='';
+    assignDocToCase(file, curDocCaseId, curDocId, false);
+  };
+  document.getElementById('docFileIn').click();
+}
+
+// ── ADD CASE ──────────────────────────────────────────
+function openNewModal() { document.getElementById('newModal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); selPersons=[]; selType=null; document.querySelectorAll('.pchip').forEach(function(x){x.classList.remove('sel');}); document.querySelectorAll('.type-opt').forEach(function(x){x.classList.remove('sel');}); }
+function togglePerson(el,name){el.classList.toggle('sel');var i=selPersons.indexOf(name);if(i>-1)selPersons.splice(i,1);else selPersons.push(name);}
+function selType(el,t){document.querySelectorAll('.type-opt').forEach(function(x){x.classList.remove('sel');});el.classList.add('sel');selType=t;}
+
+function quickAdd(type) {
+  selType = type;
+  openNewModal();
+  document.querySelectorAll('.type-opt').forEach(function(el){
+    if(el.getAttribute('onclick').includes("'"+type+"'")) el.classList.add('sel');
+  });
+}
+
+function saveNew() {
+  if(!selPersons.length){showToast('Selecciona al menos una persona');return;}
+  if(!selType){showToast('Selecciona el tipo de atención');return;}
+  var date = document.getElementById('nDate').value;
+  var amount = document.getElementById('nAmount').value;
+  var desc = document.getElementById('nDesc').value;
+  var t = TYPES[selType];
+  selPersons.forEach(function(person){
+    var c = {id:Date.now()+Math.floor(Math.random()*999),description:person+' - '+t.label+(desc?' · '+desc:''),type:selType,date:date,amount:amount||'',stage2:'pendiente',docs:{},portalStatus:{},notes:[]};
+    cases.unshift(c);
+    saveToAPI({action:'add',item:{id:c.id,description:c.description,date:c.date,amount:c.amount,type:c.type,stage:'pending',notes:[]}});
+  });
+  closeModal('newModal');
+  renderAll();
+  showToast('✅ '+selPersons.length+' caso(s) creado(s)');
+  document.getElementById('nAmount').value='';
+  document.getElementById('nDesc').value='';
+}
+
+// ── NATURAL LANGUAGE ──────────────────────────────────
+function processText() {
+  var text = document.getElementById('smartInp').value.trim();
+  if(!text){showToast('Escribe algo primero');return;}
+  var parsed = parseNL(text);
+  if(!parsed.length){showToast('No entendí. Intenta con el botón + de abajo.');return;}
+  parsed.forEach(createCaseFromParsed);
+  document.getElementById('smartInp').value='';
+  showToast('✅ '+parsed.length+' caso(s) creado(s)');
+}
+
+function parseNL(text) {
+  var t = text.toLowerCase();
+  var type='medico';
+  if(t.includes('dent')||t.includes('ortod')||t.includes('modelo')) type='dental';
+  else if(t.includes('kine')||t.includes('fisio')||t.includes('terapia')) type='kine';
+  else if(t.includes('farmac')||t.includes('remedio')||t.includes('medicam')) type='farmacia';
+  var persons=[];
+  FAMILY.forEach(function(p){if(t.includes(p.toLowerCase()))persons.push(p);});
+  if(t.includes('almu')&&!persons.includes('Almudena'))persons.push('Almudena');
+  if(t.includes('auro')&&!persons.includes('Aurora'))persons.push('Aurora');
+  if(!persons.length)persons=['?'];
+  var today = new Date();
+  var d = fmtDateInput(t.includes('ayer')?(new Date(today-86400000)):today);
+  return persons.map(function(person){
+    return {id:Date.now()+Math.floor(Math.random()*999),description:person+' - '+TYPES[type].label,type:type,date:d,amount:'',stage2:'pendiente',docs:{},portalStatus:{},notes:[text]};
+  });
+}
+
+function createCaseFromParsed(c) {
+  cases.unshift(c);
+  saveToAPI({action:'add',item:{id:c.id,description:c.description,date:c.date,amount:c.amount,type:c.type,stage:'pending',notes:c.notes}});
+  renderAll();
+}
+
+// ── HELPERS ───────────────────────────────────────────
+function showTab(tab,el){activeTab=tab;document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderAll();}
+function fmtDate(s){if(!s)return'';var d=new Date(s);return isNaN(d)?s:d.toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'});}
+function saveToAPI(data){fetch(API,{method:'POST',mode:'no-cors',body:JSON.stringify(data)}).catch(function(){});localStorage.setItem('rf_v3',JSON.stringify(cases));}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},2800);}
+
+document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)el.classList.remove('open');});});
+
+init();
 </script>
 </body>
 </html>
