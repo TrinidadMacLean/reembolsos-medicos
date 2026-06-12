@@ -976,4 +976,82 @@ function parseNL(text) {
   var t = text.toLowerCase();
   var type='medico';
   if(t.includes('dent')||t.includes('ortod')||t.includes('modelo')) type='dental';
-  else if(t.includes('kine')|
+  else if(t.includes('kine')||t.includes('fisio')||t.includes('terapia')) type='kine';
+  else if(t.includes('farmac')||t.includes('remedio')||t.includes('medicam')) type='farmacia';
+  var persons=[];
+  FAMILY.forEach(function(p){if(t.includes(p.toLowerCase()))persons.push(p);});
+  if(t.includes('almu')&&!persons.includes('Almudena'))persons.push('Almudena');
+  if(t.includes('auro')&&!persons.includes('Aurora'))persons.push('Aurora');
+  if(!persons.length)persons=['?'];
+  var today = new Date();
+  var d = fmtDateInput(t.includes('ayer')?(new Date(today-86400000)):today);
+  return persons.map(function(person){
+    return {id:Date.now()+Math.floor(Math.random()*999),description:person+' - '+TYPES[type].label,type:type,date:d,amount:'',stage2:'pendiente',docs:{},portalStatus:{},notes:[text]};
+  });
+}
+
+function createCaseFromParsed(c) {
+  cases.unshift(c);
+  saveToAPI({action:'add',item:{id:c.id,description:c.description,date:c.date,amount:c.amount,type:c.type,stage:'pending',notes:c.notes}});
+  renderAll();
+}
+
+// ── PIPELINE VIEW ─────────────────────────────────────
+function showCase(id) {
+  showTab('activos', document.querySelector('.tab'));
+  setTimeout(function(){
+    var el = document.getElementById('card-'+id);
+    if(el) el.scrollIntoView({behavior:'smooth'});
+  }, 150);
+}
+
+function renderPipeline() {
+  var merged = [
+    {ids:['pendiente'],                   label:'Pendiente',      cls:'pendiente'},
+    {ids:['bm_enviado'],                  label:'En Banmedica',   cls:'bm_enviado'},
+    {ids:['bm_aprobado'],                 label:'Aprobado BM',    cls:'bm_aprobado'},
+    {ids:['bv_enviado'],                  label:'En Bice Vida',   cls:'bv_enviado'},
+    {ids:['bv_rechazado','bm_rechazado'], label:'Rechazado',      cls:'rechazado'},
+    {ids:['completado'],                  label:'Completado',     cls:'completado'}
+  ];
+
+  var html = '<div class="pipeline"><div class="pipe-cols">';
+  merged.forEach(function(col){
+    var items = cases.filter(function(c){ return col.ids.indexOf(c.stage2)>-1; });
+    html += '<div class="pipe-col">';
+    html += '<div class="pipe-col-hdr '+col.cls+'">'+col.label+'<span class="pipe-count">'+items.length+'</span></div>';
+    html += '<div class="pipe-col-body">';
+    if(!items.length) {
+      html += '<div class="pipe-empty">Sin casos</div>';
+    } else {
+      items.forEach(function(c){
+        var t = TYPES[c.type||'medico'];
+        var title = c.name||c.description||'Sin nombre';
+        var miss = missingCount(c);
+        var warn = (miss>0&&col.ids.indexOf('pendiente')>-1) ? ' <span style="color:var(--red);font-size:10px">'+miss+' doc</span>' : '';
+        html += '<div class="pipe-card" onclick="showCase('+c.id+')">';
+        html += '<div class="pipe-card-type">'+t.icon+'</div>';
+        html += '<div class="pipe-card-title">'+title+warn+'</div>';
+        html += '<div class="pipe-card-meta">'+fmtDate(c.date)+'</div>';
+        if(c.amount) html += '<div class="pipe-card-amount">$'+Number(c.amount).toLocaleString('es-CL')+'</div>';
+        html += '</div>';
+      });
+    }
+    html += '</div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+// ── HELPERS ─────────────────────────────────────────────────
+function showTab(tab,el){activeTab=tab;document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderAll();}
+function fmtDate(s){if(!s)return'';var d=new Date(s);return isNaN(d)?s:d.toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'});}
+function saveToAPI(data){fetch(API,{method:'POST',mode:'no-cors',body:JSON.stringify(data)}).catch(function(){});localStorage.setItem('rf_v3',JSON.stringify(cases));}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},2800);}
+
+document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)el.classList.remove('open');});});
+
+init();
+</script>
+</body>
+</html>
