@@ -32,6 +32,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* MAIN */
 .main{padding:14px;max-width:720px;margin:0 auto;padding-bottom:90px}
 
+/* PIPELINE / KANBAN */
+.pipeline{overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+.pipe-cols{display:flex;gap:10px;padding-bottom:4px}
+@media(max-width:600px){.pipe-cols{flex-direction:column;}}
+.pipe-col{min-width:190px;flex:1}
+.pipe-col-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between}
+.pipe-col-hdr.pendiente{background:#fef9c3;color:#854d0e}
+.pipe-col-hdr.bm_enviado{background:#dbeafe;color:#1e40af}
+.pipe-col-hdr.bm_aprobado{background:#d1fae5;color:#065f46}
+.pipe-col-hdr.bv_enviado{background:#ede9fe;color:#5b21b6}
+.pipe-col-hdr.rechazado{background:#fee2e2;color:#991b1b}
+.pipe-col-hdr.completado{background:#dcfce7;color:#14532d}
+.pipe-col-body{background:#f3f4f6;border-radius:0 0 8px 8px;padding:8px;min-height:60px}
+.pipe-card{background:#fff;border-radius:8px;box-shadow:var(--shadow);padding:10px 11px;margin-bottom:7px;cursor:pointer}
+.pipe-card:hover{box-shadow:var(--shadow-md)}
+.pipe-card-type{font-size:18px;line-height:1;margin-bottom:3px}
+.pipe-card-title{font-size:12px;font-weight:600;line-height:1.35;margin-bottom:2px}
+.pipe-card-meta{color:var(--text-soft);font-size:10px}
+.pipe-card-amount{font-size:11px;font-weight:600;color:var(--primary);margin-top:3px}
+.pipe-empty{color:var(--text-soft);font-size:11px;text-align:center;padding:14px 0;font-style:italic}
+.pipe-count{background:rgba(0,0,0,.12);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700}
+
 /* SMART INPUT */
 .smart-bar{background:#fff;border-radius:var(--r);box-shadow:var(--shadow-md);padding:12px 14px;margin-bottom:14px;border:2px solid var(--primary)}
 .smart-bar textarea{width:100%;border:none;outline:none;resize:none;font-size:14px;color:var(--text);background:transparent;font-family:inherit;min-height:46px}
@@ -196,6 +218,7 @@ select.form-inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg 
 <div class="tabs">
   <div class="tab active" onclick="showTab('activos',this)">Activos</div>
   <div class="tab" onclick="showTab('completados',this)">Completados</div>
+  <div class="tab" onclick="showTab('pipeline',this)">🗂️ Pipeline</div>
 </div>
 
 <div class="main">
@@ -388,7 +411,7 @@ function loadCases() {
 }
 
 function migrateCase(item) {
-  if(!item.type) item.type = guessType(item.description||'');
+  if(!item.type) item.type = guessType(item.name||item.description||'');
   if(!item.docs) item.docs = {};
   if(!item.portalStatus) item.portalStatus = {};
   if(!item.stage2) item.stage2 = mapStage(item.stage,item.type);
@@ -413,12 +436,14 @@ function mapStage(s,type) {
   if(s==='bicevida') return 'bv_enviado';
   if(s==='banmedica') return 'bm_enviado';
   if(s==='approved') return 'bm_aprobado';
+  if(s==='bv_rechazado') return 'bv_rechazado';
+  if(s==='bm_rechazado') return 'bm_rechazado';
   return 'pendiente';
 }
 
 // ── RENDER ────────────────────────────────────────────
 function renderAll() {
-  var active = cases.filter(function(c){return c.stage2!=='completado';});
+  var active = cases.filter(function(c){return c.stage2!=='completado'&&c.stage2!=='bv_rechazado'&&c.stage2!=='bm_rechazado';});
   var done   = cases.filter(function(c){return c.stage2==='completado';});
 
   // Header stats
@@ -431,8 +456,10 @@ function renderAll() {
   if(done.length) html += '<div class="chip chip-green">✅ '+done.length+' completos</div>';
   document.getElementById('hdrStats').innerHTML = html;
 
-  var list = activeTab==='activos' ? active : done;
   var el = document.getElementById('caseList');
+  // Pipeline tab
+  if(activeTab==='pipeline') { el.innerHTML = renderPipeline(); return; }
+  var list = activeTab==='activos' ? active : done;
   if(!list.length) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">'+(activeTab==='activos'?'🎉':'📁')+'</div><b>'+(activeTab==='activos'?'¡Todo al día!':'Sin completados')+'</b></div>';
     return;
@@ -469,7 +496,7 @@ function renderCard(c) {
   html += '<div class="card-hdr" onclick="toggleCard(\''+c.id+'\')">';
   html += '<div class="c-icon">'+t.icon+'</div>';
   html += '<div class="c-info">';
-  html += '<div class="c-title">'+(c.description||'Sin nombre')+'</div>';
+  html += '<div class="c-title">'+(c.name||c.description||'Sin nombre')+'</div>';
   html += '<div class="c-meta">'+fmtDate(c.date)+(c.amount?' · $'+Number(c.amount).toLocaleString('es-CL'):'')+' · '+t.label+'</div>';
   html += '</div>';
   html += '<div class="c-right">'+statusBadge+(workflowBadge?workflowBadge:'')+'</div>';
@@ -733,7 +760,7 @@ function showOcrResult(info, file) {
     html += '<div class="form-label" style="margin-bottom:8px">Asignar a caso existente:</div>';
     matches.forEach(function(m){
       html += '<div class="case-match-card" onclick="confirmAssign(this,\''+m.c.id+'\',\''+info.docType+'\')">';
-      html += '<div class="case-match-title">'+TYPES[m.c.type||'medico'].icon+' '+m.c.description+'</div>';
+      html += '<div class="case-match-title">'+TYPES[m.c.type||'medico'].icon+' '+(m.c.name||m.c.description||'Sin nombre')+'</div>';
       html += '<div class="case-match-meta">'+fmtDate(m.c.date)+(m.c.amount?' · $'+Number(m.c.amount).toLocaleString('es-CL'):'')+(m.score>=80?' · <span style="color:var(--green);font-weight:600">Coincidencia alta</span>':'')+'</div>';
       html += '</div>';
     });
@@ -750,7 +777,8 @@ function showOcrResult(info, file) {
 function findMatchingCases(info) {
   var scored = cases.filter(function(c){return c.stage2!=='completado';}).map(function(c){
     var score = 0;
-    if(info.person && c.description && c.description.toLowerCase().includes(info.person.toLowerCase())) score += 50;
+    var cname = c.name||c.description||'';
+    if(info.person && cname && cname.toLowerCase().includes(info.person.toLowerCase())) score += 50;
     if(info.docType && TYPES[c.type||'medico'].docs.find(function(d){return d.id===info.docType;})) score += 30;
     if(info.date && c.date) {
       var d1=new Date(info.date), d2=new Date(c.date);
@@ -820,7 +848,7 @@ function assignDocToCase(file, caseId, docId, fromModal) {
   saveToAPI({action:'updateDoc',id:caseId,docId:docId,fileName:file.name});
   if(fromModal) closeModal('ocrModal');
   renderAll();
-  showToast('✅ Documento asignado a: '+c.description);
+  showToast('✅ Documento asignado a: '+(c.name||c.description||'Sin nombre'));
 }
 
 // ── PORTAL ACTIONS ────────────────────────────────────
@@ -948,35 +976,4 @@ function parseNL(text) {
   var t = text.toLowerCase();
   var type='medico';
   if(t.includes('dent')||t.includes('ortod')||t.includes('modelo')) type='dental';
-  else if(t.includes('kine')||t.includes('fisio')||t.includes('terapia')) type='kine';
-  else if(t.includes('farmac')||t.includes('remedio')||t.includes('medicam')) type='farmacia';
-  var persons=[];
-  FAMILY.forEach(function(p){if(t.includes(p.toLowerCase()))persons.push(p);});
-  if(t.includes('almu')&&!persons.includes('Almudena'))persons.push('Almudena');
-  if(t.includes('auro')&&!persons.includes('Aurora'))persons.push('Aurora');
-  if(!persons.length)persons=['?'];
-  var today = new Date();
-  var d = fmtDateInput(t.includes('ayer')?(new Date(today-86400000)):today);
-  return persons.map(function(person){
-    return {id:Date.now()+Math.floor(Math.random()*999),description:person+' - '+TYPES[type].label,type:type,date:d,amount:'',stage2:'pendiente',docs:{},portalStatus:{},notes:[text]};
-  });
-}
-
-function createCaseFromParsed(c) {
-  cases.unshift(c);
-  saveToAPI({action:'add',item:{id:c.id,description:c.description,date:c.date,amount:c.amount,type:c.type,stage:'pending',notes:c.notes}});
-  renderAll();
-}
-
-// ── HELPERS ───────────────────────────────────────────
-function showTab(tab,el){activeTab=tab;document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderAll();}
-function fmtDate(s){if(!s)return'';var d=new Date(s);return isNaN(d)?s:d.toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'});}
-function saveToAPI(data){fetch(API,{method:'POST',mode:'no-cors',body:JSON.stringify(data)}).catch(function(){});localStorage.setItem('rf_v3',JSON.stringify(cases));}
-function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},2800);}
-
-document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)el.classList.remove('open');});});
-
-init();
-</script>
-</body>
-</html>
+  else if(t.includes('kine')|
