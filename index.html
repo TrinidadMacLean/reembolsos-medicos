@@ -2,1056 +2,394 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Reembolsos Familiares</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reembolsos Calvo Mac-Lean</title>
 <style>
 :root {
-  --bg:#f0f4f8;--card:#fff;--primary:#2563eb;--primary-dark:#1d4ed8;
-  --green:#16a34a;--green-bg:#dcfce7;--red:#dc2626;--red-bg:#fee2e2;
-  --orange:#ea580c;--orange-bg:#ffedd5;--yellow:#ca8a04;--yellow-bg:#fef9c3;
-  --blue-bg:#dbeafe;--blue:#1e40af;
-  --gray:#6b7280;--gray-light:#f3f4f6;--border:#e5e7eb;--text:#111827;--text-soft:#6b7280;
-  --shadow:0 1px 3px rgba(0,0,0,.1);--shadow-md:0 4px 6px -1px rgba(0,0,0,.1);--r:12px;
+  --bg:#f0f2f5; --primary:#2563eb; --primary-d:#1d4ed8;
+  --bv:#7c3aed; --bv-d:#6d28d9;
+  --green:#16a34a; --red:#dc2626; --gray:#6b7280;
+  --border:#e5e7eb; --text:#111827; --sub:#6b7280;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--text);min-height:100vh;padding-bottom:68px}
 
-/* HEADER */
-.hdr{background:var(--primary);color:#fff;padding:14px 18px 10px;position:sticky;top:0;z-index:100}
-.hdr h1{font-size:17px;font-weight:700}.hdr-sub{font-size:11px;opacity:.8;margin-top:1px}
-.hdr-stats{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.chip{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:600}
-.chip-red{background:rgba(239,68,68,.4)}.chip-green{background:rgba(34,197,94,.3)}.chip-orange{background:rgba(234,88,12,.4)}
+.header{background:var(--primary);color:white;padding:14px 18px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+.header h1{font-size:17px;font-weight:700}
+.header .sub{font-size:11px;opacity:.75;margin-top:1px}
+.btn-plus{width:38px;height:38px;border-radius:50%;background:white;color:var(--primary);border:none;font-size:24px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);line-height:1}
+.btn-plus:hover{background:#f0f0f0}
 
-/* TABS */
-.tabs{background:#fff;border-bottom:1px solid var(--border);display:flex;padding:0 16px}
-.tab{flex:1;text-align:center;padding:11px 4px 9px;font-size:13px;font-weight:500;color:var(--text-soft);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
-.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;z-index:30}
+.tab-btn{flex:1;padding:10px 4px 8px;border:none;background:none;font-size:11px;font-weight:500;color:var(--sub);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab-btn .ticon{font-size:20px}
+.tab-btn.on{color:var(--primary)}
 
-/* MAIN */
-.main{padding:14px;max-width:720px;margin:0 auto;padding-bottom:90px}
+.pipeline{padding:12px 14px;max-width:640px;margin:0 auto}
+.lane{margin-bottom:10px}
+.lane-head{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13px;font-weight:600;background:white;border:1px solid var(--border);border-radius:10px 10px 0 0;cursor:pointer;user-select:none;border-left-width:3px}
+.lane-head .cnt{margin-left:auto;background:var(--border);color:var(--gray);border-radius:20px;padding:1px 8px;font-size:11px;font-weight:600}
+.docs-h{border-left-color:#f59e0b}
+.ready-h{border-left-color:var(--green)}
+.sent-h{border-left-color:var(--primary)}
+.done-h{border-left-color:#9ca3af}
+.lane-body{border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;background:#f9fafb}
+.lane-empty{padding:14px;font-size:12px;color:var(--sub);text-align:center;font-style:italic}
 
-/* PIPELINE / KANBAN */
-.pipeline{overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
-.pipe-cols{display:flex;gap:10px;padding-bottom:4px}
-@media(max-width:600px){.pipe-cols{flex-direction:column;}}
-.pipe-col{min-width:190px;flex:1}
-.pipe-col-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between}
-.pipe-col-hdr.pendiente{background:#fef9c3;color:#854d0e}
-.pipe-col-hdr.bm_enviado{background:#dbeafe;color:#1e40af}
-.pipe-col-hdr.bm_aprobado{background:#d1fae5;color:#065f46}
-.pipe-col-hdr.bv_enviado{background:#ede9fe;color:#5b21b6}
-.pipe-col-hdr.rechazado{background:#fee2e2;color:#991b1b}
-.pipe-col-hdr.completado{background:#dcfce7;color:#14532d}
-.pipe-col-body{background:#f3f4f6;border-radius:0 0 8px 8px;padding:8px;min-height:60px}
-.pipe-card{background:#fff;border-radius:8px;box-shadow:var(--shadow);padding:10px 11px;margin-bottom:7px;cursor:pointer}
-.pipe-card:hover{box-shadow:var(--shadow-md)}
-.pipe-card-type{font-size:18px;line-height:1;margin-bottom:3px}
-.pipe-card-title{font-size:12px;font-weight:600;line-height:1.35;margin-bottom:2px}
-.pipe-card-meta{color:var(--text-soft);font-size:10px}
-.pipe-card-amount{font-size:11px;font-weight:600;color:var(--primary);margin-top:3px}
-.pipe-empty{color:var(--text-soft);font-size:11px;text-align:center;padding:14px 0;font-style:italic}
-.pipe-count{background:rgba(0,0,0,.12);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700}
+.card{background:white;border-bottom:1px solid var(--border);overflow:hidden}
+.card:last-child{border-bottom:none}
+.card-head{padding:11px 14px;display:flex;align-items:center;gap:9px}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:white;flex-shrink:0}
+.cinfo{flex:1;min-width:0}
+.cname{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cdate{font-size:11px;color:var(--sub);margin-top:1px}
+.btn-del{background:none;border:none;color:#d1d5db;cursor:pointer;font-size:13px;padding:4px 6px}
+.btn-del:hover{color:var(--red)}
+.card-body{padding:12px 14px;border-top:1px solid #f3f4f6}
 
-/* SMART INPUT */
-.smart-bar{background:#fff;border-radius:var(--r);box-shadow:var(--shadow-md);padding:12px 14px;margin-bottom:14px;border:2px solid var(--primary)}
-.smart-bar textarea{width:100%;border:none;outline:none;resize:none;font-size:14px;color:var(--text);background:transparent;font-family:inherit;min-height:46px}
-.smart-bar textarea::placeholder{color:#9ca3af}
-.bar-row{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
-.qbtn{background:var(--gray-light);border:none;border-radius:20px;padding:5px 11px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text)}
-.qbtn:hover{background:var(--border)}
-.send-btn{margin-left:auto;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer}
-
-/* UPLOAD DROP ZONE - global */
-.global-drop{border:2px dashed var(--border);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;margin-bottom:14px}
-.global-drop:hover,.global-drop.over{border-color:var(--primary);background:#eff6ff}
-.global-drop-text{font-size:13px;color:var(--text-soft)}
-.global-drop-text strong{color:var(--primary)}
-
-/* CARDS */
-.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;cursor:pointer;transition:transform .1s,box-shadow .1s}
-.card:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
-.card-hdr{padding:13px 15px;display:flex;align-items:flex-start;gap:11px}
-.c-icon{font-size:26px;flex-shrink:0;line-height:1}
-.c-info{flex:1;min-width:0}
-.c-title{font-size:14px;font-weight:600;margin-bottom:2px}
-.c-meta{font-size:11px;color:var(--text-soft)}
-.c-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-.badge{font-size:10px;font-weight:700;padding:3px 7px;border-radius:20px;display:inline-block}
-.badge-red{background:var(--red-bg);color:var(--red)}
-.badge-green{background:var(--green-bg);color:var(--green)}
-.badge-orange{background:var(--orange-bg);color:var(--orange)}
-.badge-blue{background:var(--blue-bg);color:var(--blue)}
-.badge-gray{background:var(--gray-light);color:var(--gray)}
-
-/* PROGRESS BAR */
-.progress-bar-wrap{height:3px;background:var(--border);margin:0 15px}
-.progress-bar{height:3px;background:var(--primary);border-radius:2px;transition:width .3s}
-
-/* EXPANDED SECTIONS */
-.section{border-top:1px solid var(--border);background:#fafafa}
-.section-hdr{padding:10px 15px 6px;font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px}
-
-/* DOCS TABLE */
-.doc-row{display:flex;align-items:center;gap:10px;padding:9px 15px;border-bottom:1px solid var(--border);background:#fff}
+.doc-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f9fafb}
 .doc-row:last-child{border-bottom:none}
-.doc-status{font-size:18px;flex-shrink:0;width:22px;text-align:center}
-.doc-info{flex:1;min-width:0}
-.doc-name{font-size:13px;font-weight:600}
-.doc-sub{font-size:11px;color:var(--text-soft);margin-top:1px}
-.doc-sub.green{color:var(--green)}
-.doc-sub.red{color:var(--red);font-weight:600}
-.doc-action{flex-shrink:0}
-.doc-btn{border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer}
-.doc-btn-upload{background:var(--primary);color:#fff}
-.doc-btn-view{background:var(--gray-light);color:var(--text)}
-.doc-btn-download{background:var(--green-bg);color:var(--green)}
+.chk{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.chk.on{background:var(--green);border-color:var(--green);color:white}
+.dlabel{flex:1}
+.dlabel .dtxt{font-size:12px}
+.dlabel .dfn{font-size:11px;color:var(--sub);margin-top:1px}
+label.upbtn{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer;color:var(--gray)}
+label.upbtn:hover{border-color:var(--primary);color:var(--primary)}
+input[type=file]{display:none}
+.rmbtn{font-size:11px;padding:4px 7px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer;color:var(--gray)}
+.rmbtn:hover{border-color:var(--red);color:var(--red)}
+.pbar{height:3px;background:var(--border);border-radius:2px;margin:8px 0 0}
+.pfill{height:100%;background:var(--green);border-radius:2px;transition:width .3s}
+.cta{width:100%;margin-top:10px;padding:10px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:white}
+.cta-bm{background:var(--primary)}.cta-bm:hover{background:var(--primary-d)}
+.cta-bv{background:var(--bv)}.cta-bv:hover{background:var(--bv-d)}
+.cta2{width:100%;margin-top:7px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;background:white;color:var(--gray)}
+.cta2:hover{border-color:var(--primary);color:var(--primary)}
+.itbl{width:100%;border-collapse:collapse}
+.itbl td{padding:3px 0;font-size:12px}
+.itbl .lbl{color:var(--sub);width:45%}
+.itbl .val{font-weight:500}
+.rbtns{display:flex;gap:6px;margin-top:10px}
+.rbtns button{flex:1;padding:7px;border-radius:7px;font-size:11px;cursor:pointer;font-weight:500;border:1px solid}
+.rok{background:var(--green);color:white;border-color:var(--green)}
+.rno{background:white;color:var(--red);border-color:var(--red)}
+.rded{background:white;color:var(--gray);border-color:var(--border)}
+.res-row{display:flex;align-items:center;gap:10px}
+.res-ico{font-size:24px}
+.res-amt{font-size:18px;font-weight:700;color:var(--green)}
+.res-det{font-size:11px;color:var(--sub);margin-top:2px}
 
-/* PORTAL SECTION */
-.portal-section{padding:12px 15px;border-top:1px solid var(--border);background:#fff}
-.portal-title{font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.portal-card{border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
-.portal-card.active{border-color:var(--primary);background:#eff6ff}
-.portal-card.done{border-color:var(--green);background:var(--green-bg)}
-.portal-card.waiting{border-color:var(--orange);background:var(--orange-bg)}
-.portal-name{font-size:14px;font-weight:700;margin-bottom:4px}
-.portal-status{font-size:12px;color:var(--text-soft);margin-bottom:8px}
-.portal-status.done{color:var(--green);font-weight:600}
-.portal-status.waiting{color:var(--orange);font-weight:600}
-.portal-actions{display:flex;gap:7px;flex-wrap:wrap}
-.portal-link{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;text-decoration:none}
-.portal-link-banmedica{background:var(--blue-bg);color:var(--blue)}
-.portal-link-bicevida{background:var(--yellow-bg);color:#92400e}
-.portal-btn-mark{background:var(--primary);color:#fff;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer}
-.portal-btn-download{background:var(--green-bg);color:var(--green);padding:7px 12px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer}
-.portal-timestamp{font-size:10px;color:var(--text-soft);margin-top:4px}
+.planilla{padding:14px;max-width:640px;margin:0 auto}
+.plan-hdr{font-size:16px;font-weight:700;margin-bottom:3px}
+.plan-sub{font-size:12px;color:var(--sub);margin-bottom:14px}
+.plan-chips{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.pchip{flex:1;min-width:100px;background:white;border:1px solid var(--border);border-radius:10px;padding:10px 14px;border-top-width:3px}
+.pchip.bm{border-top-color:var(--primary)}
+.pchip.bv{border-top-color:var(--bv)}
+.pchip.tot{border-top-color:var(--green)}
+.pchip .cl{font-size:11px;color:var(--sub);font-weight:500}
+.pchip .cv{font-size:17px;font-weight:700;margin-top:3px}
+.cv.bm{color:var(--primary)}.cv.bv{color:var(--bv)}.cv.tot{color:var(--green)}
 
-/* NOTES */
-.notes-section{padding:10px 15px;border-top:1px solid var(--border);background:#fff}
-.note-item{font-size:12px;color:var(--text-soft);padding:3px 0;display:flex;gap:6px}
-.note-item::before{content:'•';color:var(--primary)}
-.note-row{display:flex;gap:7px;margin-top:8px}
-.note-inp{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;outline:none}
-.note-inp:focus{border-color:var(--primary)}
-.note-add{background:var(--gray-light);border:none;border-radius:6px;padding:7px 11px;font-size:13px;cursor:pointer;font-weight:700}
+.ptbl{width:100%;border-collapse:collapse;background:white;border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:13px}
+.ptbl th{padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--sub);background:#f9fafb;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.04em}
+.ptbl td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.ptbl tr:last-child td{border-bottom:none}
+.ptbl .amt{font-weight:600}
+.ptbl .bm{color:var(--primary)}.ptbl .bv{color:var(--bv)}.ptbl .tot{color:var(--green)}
+.ptbl .empty{text-align:center;color:var(--sub);font-style:italic;font-weight:normal}
 
-/* CARD ACTIONS */
-.card-actions{padding:9px 15px;border-top:1px solid var(--border);background:#fff;display:flex;gap:7px;justify-content:flex-end}
-.btn-adv{background:var(--primary);color:#fff;border:none;border-radius:6px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer}
-.btn-adv:hover{background:var(--primary-dark)}
-.btn-del{background:none;color:var(--red);border:1px solid var(--red);border-radius:6px;padding:7px 11px;font-size:13px;cursor:pointer}
-
-/* MODALS */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-end;justify-content:center}
-.overlay.open{display:flex}
-.sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:720px;padding:20px;max-height:92vh;overflow-y:auto}
-@media(min-width:640px){.sheet{border-radius:20px;margin-bottom:40px}}
-.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
-.sheet-title{font-size:17px;font-weight:700;margin-bottom:16px}
-.form-group{margin-bottom:13px}
-.form-label{font-size:13px;font-weight:600;color:var(--text-soft);margin-bottom:5px;display:block}
-.form-inp{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;outline:none}
-.form-inp:focus{border-color:var(--primary)}
-select.form-inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
-@media(min-width:480px){.type-grid{grid-template-columns:repeat(4,1fr)}}
-.type-opt{padding:11px 8px;border:2px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;transition:all .2s}
-.type-opt:hover,.type-opt.sel{border-color:var(--primary);background:#eff6ff}
-.type-opt-icon{font-size:22px;margin-bottom:3px}
-.type-opt-label{font-size:12px;font-weight:600}
-.person-chips{display:flex;flex-wrap:wrap;gap:6px}
-.pchip{padding:6px 12px;border:2px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s}
-.pchip.sel{border-color:var(--primary);background:#eff6ff;color:var(--primary);font-weight:600}
-.btn-primary{width:100%;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
-.btn-primary:hover{background:var(--primary-dark)}
-.btn-cancel{width:100%;background:var(--gray-light);color:var(--text);border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;margin-top:7px}
-
-/* OCR MODAL */
-.ocr-result{background:var(--gray-light);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px}
-.ocr-field{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
-.ocr-field:last-child{border-bottom:none}
-.ocr-label{font-weight:600;color:var(--text-soft);min-width:90px;font-size:12px}
-.ocr-value{color:var(--text);font-size:13px}
-.ocr-value.found{color:var(--green);font-weight:600}
-.ocr-value.not-found{color:var(--text-soft)}
-.case-match-card{border:2px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px;cursor:pointer;transition:all .2s}
-.case-match-card:hover,.case-match-card.sel{border-color:var(--primary);background:#eff6ff}
-.case-match-title{font-size:13px;font-weight:600}
-.case-match-meta{font-size:11px;color:var(--text-soft);margin-top:2px}
-
-/* FAB */
-.fab{position:fixed;bottom:22px;right:18px;width:54px;height:54px;background:var(--primary);color:#fff;border:none;border-radius:50%;font-size:26px;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:transform .2s}
-.fab:hover{transform:scale(1.1)}
-
-/* TOAST */
-.toast{position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:500;display:none;box-shadow:var(--shadow-md);max-width:320px;text-align:center}
-
-/* LOADING */
-.loading{display:flex;align-items:center;justify-content:center;padding:40px}
-.spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* EMPTY */
-.empty{text-align:center;padding:50px 20px;color:var(--text-soft)}
-.empty-icon{font-size:44px;margin-bottom:10px}
-
-/* SCAN ANIMATION */
-.scanning{display:flex;align-items:center;gap:10px;padding:12px;background:var(--blue-bg);border-radius:8px;margin-bottom:12px}
-.scan-spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
-.scan-text{font-size:13px;color:var(--blue);font-weight:500}
-
-/* AMOUNT */
-.amount-big{font-size:15px;font-weight:700;color:var(--text)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.ov.h{display:none}
+.modal{background:white;border-radius:14px;padding:22px;width:100%;max-width:360px}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:18px}
+.modal .hint{font-size:13px;color:var(--sub);margin-bottom:14px;margin-top:-10px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--sub);font-weight:500;margin-bottom:5px}
+.field select,.field input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:white}
+.field select:focus,.field input:focus{outline:none;border-color:var(--primary)}
+.mbtns{display:flex;gap:8px;margin-top:18px}
+.mcnl{flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;background:white;font-size:14px;cursor:pointer}
+.mok{flex:2;padding:10px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.mok:hover{background:var(--primary-d)}
+.prev-box{background:#f9fafb;border-radius:8px;padding:10px;margin-top:4px;font-size:12px;color:#374151;line-height:1.8;display:none}
 </style>
 </head>
 <body>
 
-<div class="hdr">
-  <h1>🏥 Reembolsos Familiares</h1>
-  <div class="hdr-sub">Calvo Mac-Lean</div>
-  <div class="hdr-stats" id="hdrStats">
-    <div class="chip">Cargando...</div>
+<div class="header">
+  <div>
+    <h1>Reembolsos 🏥</h1>
+    <div class="sub">Calvo Mac-Lean</div>
+  </div>
+  <button class="btn-plus" onclick="openAdd()" title="Nuevo caso">+</button>
+</div>
+
+<div id="view-pipeline">
+  <div class="pipeline">
+    <div class="lane">
+      <div class="lane-head docs-h" onclick="toggleLane('l-docs')">
+        <span>📎 Faltan documentos</span>
+        <span class="cnt" id="cnt-docs">0</span>
+      </div>
+      <div class="lane-body" id="l-docs"></div>
+    </div>
+    <div class="lane">
+      <div class="lane-head ready-h" onclick="toggleLane('l-ready')">
+        <span>🚀 Listos para enviar</span>
+        <span class="cnt" id="cnt-ready">0</span>
+      </div>
+      <div class="lane-body" id="l-ready"></div>
+    </div>
+    <div class="lane">
+      <div class="lane-head sent-h" onclick="toggleLane('l-sent')">
+        <span>📤 Enviados</span>
+        <span class="cnt" id="cnt-sent">0</span>
+      </div>
+      <div class="lane-body" id="l-sent"></div>
+    </div>
+    <div class="lane">
+      <div class="lane-head done-h" onclick="toggleLane('l-done')">
+        <span>✅ Resueltos</span>
+        <span class="cnt" id="cnt-done">0</span>
+      </div>
+      <div class="lane-body" id="l-done"></div>
+    </div>
+  </div>
+</div>
+
+<div id="view-planilla" style="display:none">
+  <div class="planilla">
+    <div class="plan-hdr">Resumen de reembolsos</div>
+    <div class="plan-sub">Solo casos aprobados con monto registrado</div>
+    <div class="plan-chips" id="plan-chips"></div>
+    <table class="ptbl">
+      <thead>
+        <tr>
+          <th>Mes</th>
+          <th>Banmedica</th>
+          <th>Bice Vida</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="plan-body"></tbody>
+    </table>
   </div>
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab('activos',this)">Activos</div>
-  <div class="tab" onclick="showTab('completados',this)">Completados</div>
-  <div class="tab" onclick="showTab('pipeline',this)">🗂️ Pipeline</div>
+  <button class="tab-btn on" id="tab-pipeline" onclick="showTab('pipeline')">
+    <span class="ticon">📋</span>
+    <span>Pipeline</span>
+  </button>
+  <button class="tab-btn" id="tab-planilla" onclick="showTab('planilla')">
+    <span class="ticon">📊</span>
+    <span>Planilla</span>
+  </button>
 </div>
 
-<div class="main">
-  <!-- Smart input -->
-  <div class="smart-bar">
-    <textarea id="smartInp" rows="2" placeholder='Ej: "Hoy fui al dentista con Almu y Aurora" o "Trini fue al kinesiólogo ayer"...'></textarea>
-    <div class="bar-row">
-      <button class="qbtn" onclick="quickAdd('dental')">🦷 Dental</button>
-      <button class="qbtn" onclick="quickAdd('kine')">💪 Kine</button>
-      <button class="qbtn" onclick="quickAdd('medico')">🏥 Médico</button>
-      <button class="qbtn" onclick="quickAdd('farmacia')">💊 Farmacia</button>
-      <button class="send-btn" onclick="processText()">Agregar →</button>
+<div class="ov h" id="addOv">
+  <div class="modal">
+    <h2>Nuevo caso</h2>
+    <div class="field">
+      <label>Persona</label>
+      <select id="fP">
+        <option value="">Selecciona...</option>
+        <option>Javier</option><option>Maria</option><option>Trini</option>
+        <option>Aurora</option><option>Almudena</option><option>Roberto</option>
+      </select>
     </div>
-  </div>
-
-  <!-- Global drop zone -->
-  <div class="global-drop" id="globalDrop" onclick="document.getElementById('fileIn').click()">
-    <div class="global-drop-text">📎 <strong>Arrastra o toca aquí para subir documentos</strong><br>
-    Detecta automáticamente: boletas, formularios, bonos, órdenes médicas</div>
-  </div>
-
-  <div id="caseList"><div class="loading"><div class="spinner"></div></div></div>
-</div>
-
-<button class="fab" onclick="openNewModal()" title="Nuevo caso">＋</button>
-
-<!-- Hidden inputs -->
-<input type="file" id="fileIn" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.gif" onchange="handleFileInput(event,'global')">
-<input type="file" id="docFileIn" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.gif" onchange="handleFileInput(event,'specific')">
-
-<!-- New case modal -->
-<div class="overlay" id="newModal">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">Nuevo reembolso</div>
-    <div class="form-group">
-      <label class="form-label">¿Quién fue?</label>
-      <div class="person-chips" id="pchips">
-        <div class="pchip" onclick="togglePerson(this,'Aurora')">👧 Aurora</div>
-        <div class="pchip" onclick="togglePerson(this,'Almudena')">👧 Almudena</div>
-        <div class="pchip" onclick="togglePerson(this,'Roberto')">👶 Roberto</div>
-        <div class="pchip" onclick="togglePerson(this,'Trini')">👩 Trini</div>
-        <div class="pchip" onclick="togglePerson(this,'Javier')">👨 Javier</div>
-      </div>
+    <div class="field">
+      <label>Tipo de atencion</label>
+      <select id="fT" onchange="onType()">
+        <option value="">Selecciona...</option>
+        <option value="dental">🦷 Dental</option>
+        <option value="kine">💪 Kinesiologia</option>
+        <option value="medico">🏥 Medico / Consulta</option>
+        <option value="optica">👓 Optica</option>
+        <option value="farmacia">💊 Farmacia</option>
+        <option value="otro">📋 Otro</option>
+      </select>
     </div>
-    <div class="form-group">
-      <label class="form-label">Tipo de atención</label>
-      <div class="type-grid" id="typeGrid">
-        <div class="type-opt" onclick="selType(this,'dental')"><div class="type-opt-icon">🦷</div><div class="type-opt-label">Dental</div></div>
-        <div class="type-opt" onclick="selType(this,'kine')"><div class="type-opt-icon">💪</div><div class="type-opt-label">Kinesiología</div></div>
-        <div class="type-opt" onclick="selType(this,'medico')"><div class="type-opt-icon">🏥</div><div class="type-opt-label">Médico</div></div>
-        <div class="type-opt" onclick="selType(this,'farmacia')"><div class="type-opt-icon">💊</div><div class="type-opt-label">Farmacia</div></div>
-      </div>
+    <div class="field">
+      <label>Fecha de atencion</label>
+      <input type="date" id="fDate">
     </div>
-    <div class="form-group">
-      <label class="form-label">Fecha de atención</label>
-      <input type="date" class="form-inp" id="nDate">
+    <div class="field" id="descF" style="display:none">
+      <label>Descripcion (opcional)</label>
+      <input type="text" id="fDesc" placeholder="ej: 6 sesiones piso pelvico">
     </div>
-    <div class="form-group">
-      <label class="form-label">Monto ($)</label>
-      <input type="number" class="form-inp" id="nAmount" placeholder="ej: 77350">
+    <div class="prev-box" id="prevBox"></div>
+    <div class="mbtns">
+      <button class="mcnl" onclick="close_('addOv')">Cancelar</button>
+      <button class="mok" onclick="doCreate()">Crear</button>
     </div>
-    <div class="form-group">
-      <label class="form-label">Descripción (opcional)</label>
-      <input type="text" class="form-inp" id="nDesc" placeholder="ej: Estudio de modelos, Consulta, Sesión 1...">
-    </div>
-    <button class="btn-primary" onclick="saveNew()">Crear caso →</button>
-    <button class="btn-cancel" onclick="closeModal('newModal')">Cancelar</button>
   </div>
 </div>
 
-<!-- OCR / Assign modal -->
-<div class="overlay" id="ocrModal">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title" id="ocrTitle">Analizando documento...</div>
-    <div id="ocrBody"></div>
+<div class="ov h" id="solOv">
+  <div class="modal">
+    <h2>Solicitud enviada</h2>
+    <p class="hint">Ingresa el numero que te dio el portal</p>
+    <div class="field"><label>N de solicitud</label><input type="text" id="fSolN" placeholder="ej: 13507041"></div>
+    <div class="field"><label>Fecha estimada de respuesta</label><input type="date" id="fSolD"></div>
+    <div class="mbtns">
+      <button class="mcnl" onclick="close_('solOv')">Cancelar</button>
+      <button class="mok" onclick="doSent()">Guardar</button>
+    </div>
   </div>
 </div>
 
-<!-- Portal action modal -->
-<div class="overlay" id="portalModal">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div id="portalBody"></div>
+<div class="ov h" id="amtOv">
+  <div class="modal">
+    <h2>Monto reembolsado</h2>
+    <p class="hint">Cuanto reembolsaron?</p>
+    <div class="field"><label>Monto ($)</label><input type="number" id="fAmt" placeholder="ej: 77350"></div>
+    <div class="mbtns">
+      <button class="mcnl" onclick="close_('amtOv')">Cancelar</button>
+      <button class="mok" onclick="doApproved()">Guardar</button>
+    </div>
   </div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-var API = 'https://script.google.com/macros/s/AKfycbxvs_Me7KmnMvBIdvR9KibCzeDkqkloksyALGI3DbMQPBy8J7kuRJO1hFTaTQNcFIqjNg/exec';
-var FAMILY = ['Aurora','Almudena','Roberto','Trini','Javier'];
-
-var TYPES = {
-  dental:{icon:'🦷',label:'Dental',
-    docs:[
-      {id:'boleta',name:'Boleta',desc:'Boleta del dentista',req:true},
-      {id:'form_dental',name:'Formulario Dental Bice Vida',desc:'Parte III completada y timbrada por dentista',req:true},
-      {id:'bono_isapre',name:'Bono Isapre/Fonasa',desc:'Solo si fue bonificado previamente',req:false}
-    ],
-    workflow:[
-      {portal:'bicevida',step:'Subir a Bice Vida',docs:['boleta','form_dental'],needsFirst:null}
-    ]
-  },
-  kine:{icon:'💪',label:'Kinesiología',
-    docs:[
-      {id:'orden',name:'Orden médica',desc:'Receta del médico que derivó',req:true},
-      {id:'boleta',name:'Boleta(s)',desc:'Boletas de las sesiones de kine',req:true},
-      {id:'bono_banmedica',name:'Bono Banmédica',desc:'Descargado del portal Banmédica',req:true}
-    ],
-    workflow:[
-      {portal:'banmedica',step:'Subir orden + boleta a Banmédica',docs:['orden','boleta'],needsFirst:null},
-      {portal:'bicevida',step:'Subir bono a Bice Vida',docs:['boleta','bono_banmedica'],needsFirst:'banmedica'}
-    ]
-  },
-  medico:{icon:'🏥',label:'Médico / Especialista',
-    docs:[
-      {id:'boleta',name:'Boleta',desc:'Boleta de la consulta',req:true},
-      {id:'bono_banmedica',name:'Bono Banmédica',desc:'Descargado del portal Banmédica',req:true}
-    ],
-    workflow:[
-      {portal:'banmedica',step:'Subir boleta a Banmédica',docs:['boleta'],needsFirst:null},
-      {portal:'bicevida',step:'Subir bono a Bice Vida',docs:['boleta','bono_banmedica'],needsFirst:'banmedica'}
-    ]
-  },
-  farmacia:{icon:'💊',label:'Farmacia',
-    docs:[
-      {id:'receta',name:'Receta médica',desc:'Receta del médico',req:true},
-      {id:'boleta',name:'Boleta',desc:'Boleta de la farmacia',req:true}
-    ],
-    workflow:[
-      {portal:'bicevida',step:'Subir receta + boleta a Bice Vida',docs:['receta','boleta'],needsFirst:null}
-    ]
-  }
+const API='https://script.google.com/macros/s/AKfycbxvs_Me7KmnMvBIdvR9KibCzeDkqkloksyALGI3DbMQPBy8J7kuRJO1hFTaTQNcFIqjNg/exec';
+const SK='reembolsos_v4';
+const T={
+  dental: {l:'Dental',      e:'🦷',p:'bicevida', pl:'Bice Vida',       pu:'https://sucursal.bicevida.cl/reembolsos/nueva-solicitud',                    docs:[{id:'boleta',l:'Boleta / Factura'},{id:'formulario',l:'Formulario Dental Bice Vida'}]},
+  kine:   {l:'Kinesiologia',e:'💪',p:'banmedica',pl:'Banmedica',       pu:'https://afiliados.isaprebanmedica.cl/view/reembolsos/solicitar',              docs:[{id:'orden',l:'Orden medica'},{id:'boleta',l:'Boleta / Factura'}]},
+  medico: {l:'Medico',      e:'🏥',p:'banmedica',pl:'Banmedica',       pu:'https://afiliados.isaprebanmedica.cl/view/reembolsos/solicitar',              docs:[{id:'bono',l:'Bono Banmedica'},{id:'boleta',l:'Boleta / Factura'}]},
+  optica: {l:'Optica',      e:'👓',p:'banmedica',pl:'Banmedica',       pu:'https://afiliados.isaprebanmedica.cl/view/reembolsos/solicitar',              docs:[{id:'receta',l:'Receta optica'},{id:'boleta',l:'Boleta / Factura'}]},
+  farmacia:{l:'Farmacia',   e:'💊',p:'bicevida', pl:'Bice Vida (auto)',pu:null,docs:[]},
+  otro:   {l:'Otro',        e:'📋',p:'banmedica',pl:'Banmedica',       pu:'https://afiliados.isaprebanmedica.cl/view/reembolsos/solicitar',              docs:[{id:'doc1',l:'Documento principal'},{id:'boleta',l:'Boleta / Factura'}]}
 };
+const CLR={Javier:'#2563eb',Maria:'#7c3aed',Trini:'#059669',Aurora:'#d97706',Almudena:'#dc2626',Roberto:'#0891b2'};
+let cases=[],_sol=null,_amt=null;
 
-var PORTALS = {
-  banmedica:{name:'Banmédica',url:'https://login.isaprebanmedica.cl/login',color:'portal-link-banmedica',emoji:'🏥',rut:'17.698.763-4'},
-  bicevida:{name:'Bice Vida',url:'https://sucursal.bicevida.cl',color:'portal-link-bicevida',emoji:'🛡️',rut:'17.698.712-k'}
-};
-
-var cases = [];
-var selPersons = [];
-var selType = null;
-var curDocCaseId = null;
-var curDocId = null;
-var pendingFile = null;
-var activeTab = 'activos';
-
-// ── INIT ──────────────────────────────────────────────
-function init() {
-  var d = new Date();
-  document.getElementById('nDate').value = fmtDateInput(d);
-  setupDrop();
-  loadCases();
+function load(){try{cases=JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){cases=[];}}
+function save(){
+  localStorage.setItem(SK,JSON.stringify(cases));
+  try{fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'v4',cases})});}catch(e){}
 }
+function allDone(c){const t=T[c.type];if(!t||!t.docs.length)return true;return t.docs.every(d=>c.docs&&c.docs[d.id]);}
+function fd(s){if(!s)return '';return new Date(s+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'});}
+function fm(n){return '$'+Number(n).toLocaleString('es-CL');}
+function fmon(s){if(!s)return '';return new Date(s+'T12:00').toLocaleDateString('es-CL',{month:'long',year:'numeric'});}
+function mkey(s){if(!s)return '0000-00';const d=new Date(s+'T12:00');return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 
-function setupDrop() {
-  var zone = document.getElementById('globalDrop');
-  zone.addEventListener('dragover', function(e){e.preventDefault();zone.classList.add('over');});
-  zone.addEventListener('dragleave', function(){zone.classList.remove('over');});
-  zone.addEventListener('drop', function(e){
-    e.preventDefault();zone.classList.remove('over');
-    if(e.dataTransfer.files[0]) processDroppedFile(e.dataTransfer.files[0]);
+function showTab(t){
+  document.getElementById('view-pipeline').style.display=t==='pipeline'?'':'none';
+  document.getElementById('view-planilla').style.display=t==='planilla'?'':'none';
+  document.getElementById('tab-pipeline').classList.toggle('on',t==='pipeline');
+  document.getElementById('tab-planilla').classList.toggle('on',t==='planilla');
+  if(t==='planilla')renderPlanilla();
+}
+function toggleLane(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'':'none';}
+
+function render(){
+  const docs=[],ready=[],sent=[],done=[];
+  cases.forEach(c=>{
+    const st=c.stage||'docs';
+    if(['approved','rejected','deductible'].includes(st))done.push(c);
+    else if(st==='submitted')sent.push(c);
+    else if(allDone(c))ready.push(c);
+    else docs.push(c);
   });
-  // Full-page drag
-  document.addEventListener('dragover',function(e){e.preventDefault();});
-  document.addEventListener('drop',function(e){
-    e.preventDefault();
-    if(e.target !== zone && e.dataTransfer.files[0]) processDroppedFile(e.dataTransfer.files[0]);
-  });
+  lane('l-docs','cnt-docs',docs,'Sin casos con documentos pendientes');
+  lane('l-ready','cnt-ready',ready,'No hay casos listos para enviar');
+  lane('l-sent','cnt-sent',sent,'No hay casos enviados aun');
+  lane('l-done','cnt-done',done,'No hay casos resueltos aun');
+}
+function lane(bid,cid,arr,msg){
+  document.getElementById(cid).textContent=arr.length;
+  const el=document.getElementById(bid);
+  el.innerHTML=arr.length?arr.map(mkCard).join(''):`<div class="lane-empty">${msg}</div>`;
 }
 
-function fmtDateInput(d) {
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-
-// ── LOAD DATA ─────────────────────────────────────────
-function loadCases() {
-  fetch(API).then(function(r){return r.json();}).then(function(data){
-    cases = (data.items||data||[]).map(migrateCase);
-    renderAll();
-  }).catch(function(){
-    cases = JSON.parse(localStorage.getItem('rf_v3')||'[]');
-    renderAll();
-  });
-}
-
-function migrateCase(item) {
-  if(!item.type) item.type = guessType(item.name||item.description||'');
-  if(!item.docs) item.docs = {};
-  if(!item.portalStatus) item.portalStatus = {};
-  if(!item.stage2) item.stage2 = mapStage(item.stage,item.type);
-  // Migrate old doc flags
-  if(item.fOrden==='ok' && !item.docs.orden) item.docs.orden={name:'orden_medica',uploaded:true,date:item.date};
-  if(item.fBoleta==='ok' && !item.docs.boleta) item.docs.boleta={name:'boleta',uploaded:true,date:item.date};
-  if(!item.notes) item.notes=[];
-  return item;
-}
-
-function guessType(desc) {
-  var d=(desc||'').toLowerCase();
-  if(d.includes('dent')||d.includes('ortod')||d.includes('modelo')) return 'dental';
-  if(d.includes('kine')||d.includes('fisio')) return 'kine';
-  if(d.includes('farmac')||d.includes('medicam')||d.includes('remedio')) return 'farmacia';
-  return 'medico';
-}
-
-function mapStage(s,type) {
-  if(!s||s==='pending') return 'pendiente';
-  if(s==='done') return 'completado';
-  if(s==='bicevida') return 'bv_enviado';
-  if(s==='banmedica') return 'bm_enviado';
-  if(s==='approved') return 'bm_aprobado';
-  if(s==='bv_rechazado') return 'bv_rechazado';
-  if(s==='bm_rechazado') return 'bm_rechazado';
-  return 'pendiente';
-}
-
-// ── RENDER ────────────────────────────────────────────
-function renderAll() {
-  var active = cases.filter(function(c){return c.stage2!=='completado'&&c.stage2!=='bv_rechazado'&&c.stage2!=='bm_rechazado';});
-  var done   = cases.filter(function(c){return c.stage2==='completado';});
-
-  // Header stats
-  var missing = active.filter(function(c){return missingCount(c)>0;}).length;
-  var ready   = active.filter(function(c){return missingCount(c)===0 && c.stage2==='pendiente';}).length;
-  var html = '';
-  if(missing) html += '<div class="chip chip-red">⚠️ '+missing+' falta doc</div>';
-  if(ready)   html += '<div class="chip chip-orange">📤 '+ready+' listos</div>';
-  html += '<div class="chip">📋 '+active.length+' activos</div>';
-  if(done.length) html += '<div class="chip chip-green">✅ '+done.length+' completos</div>';
-  document.getElementById('hdrStats').innerHTML = html;
-
-  var el = document.getElementById('caseList');
-  // Pipeline tab
-  if(activeTab==='pipeline') { el.innerHTML = renderPipeline(); return; }
-  var list = activeTab==='activos' ? active : done;
-  if(!list.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">'+(activeTab==='activos'?'🎉':'📁')+'</div><b>'+(activeTab==='activos'?'¡Todo al día!':'Sin completados')+'</b></div>';
-    return;
-  }
-  el.innerHTML = list.map(renderCard).join('');
-}
-
-function missingCount(c) {
-  var t=TYPES[c.type||'medico'];
-  return t.docs.filter(function(d){return d.req && !(c.docs&&c.docs[d.id]&&c.docs[d.id].uploaded);}).length;
-}
-
-function getProgress(c) {
-  var t=TYPES[c.type||'medico'];
-  var total=t.docs.filter(function(d){return d.req;}).length;
-  var done=t.docs.filter(function(d){return d.req&&c.docs&&c.docs[d.id]&&c.docs[d.id].uploaded;}).length;
-  return total>0 ? Math.round((done/total)*100) : 0;
-}
-
-function renderCard(c) {
-  var t = TYPES[c.type||'medico'];
-  var miss = missingCount(c);
-  var prog = getProgress(c);
-  var exp = c._expanded;
-
-  var statusBadge = '';
-  if(c.stage2==='completado') statusBadge='<span class="badge badge-green">✅ Completado</span>';
-  else if(miss>0) statusBadge='<span class="badge badge-red">⚠️ '+miss+' falta'+(miss>1?'n':'')+'</span>';
-  else if(prog===100) statusBadge='<span class="badge badge-orange">📤 Listo para enviar</span>';
-
-  var workflowBadge = getWorkflowBadge(c);
-
-  var html = '<div class="card" id="card-'+c.id+'">';
-  html += '<div class="card-hdr" onclick="toggleCard(\''+c.id+'\')">';
-  html += '<div class="c-icon">'+t.icon+'</div>';
-  html += '<div class="c-info">';
-  html += '<div class="c-title">'+(c.name||c.description||'Sin nombre')+'</div>';
-  html += '<div class="c-meta">'+fmtDate(c.date)+(c.amount?' · $'+Number(c.amount).toLocaleString('es-CL'):'')+' · '+t.label+'</div>';
-  html += '</div>';
-  html += '<div class="c-right">'+statusBadge+(workflowBadge?workflowBadge:'')+'</div>';
-  html += '</div>';
-
-  // Progress bar
-  html += '<div class="progress-bar-wrap"><div class="progress-bar" style="width:'+prog+'%"></div></div>';
-
-  if(exp) {
-    // DOCUMENTS section
-    html += '<div class="section">';
-    html += '<div class="section-hdr">📄 Documentos requeridos</div>';
-    t.docs.forEach(function(doc){
-      var uploaded = c.docs&&c.docs[doc.id]&&c.docs[doc.id].uploaded;
-      var fileInfo  = uploaded ? c.docs[doc.id] : null;
-      html += '<div class="doc-row">';
-      html += '<div class="doc-status">'+(uploaded?'✅':(doc.req?'🔴':'🟡'))+'</div>';
-      html += '<div class="doc-info"><div class="doc-name">'+doc.name+(doc.req?'':' <span style="color:#9ca3af;font-size:10px">(opcional)</span>')+'</div>';
-      if(uploaded && fileInfo) html += '<div class="doc-sub green">📄 '+fileInfo.name+(fileInfo.date?' · '+fmtDate(fileInfo.date):'')+'</div>';
-      else html += '<div class="doc-sub red">'+doc.desc+'</div>';
-      html += '</div>';
-      html += '<div class="doc-action">';
-      if(uploaded) html += '<button class="doc-btn doc-btn-view" onclick="event.stopPropagation()">Ver</button>';
-      html += '<button class="doc-btn doc-btn-upload" onclick="event.stopPropagation();triggerDoc(\''+c.id+'\',\''+doc.id+'\')">'+(!uploaded?'📎 Subir':'↺ Reemplazar')+'</button>';
-      html += '</div>';
-      html += '</div>';
-    });
-    html += '</div>';
-
-    // PORTAL WORKFLOW section
-    html += renderPortalSection(c);
-
-    // NOTES
-    var notes = c.notes||[];
-    html += '<div class="notes-section">';
-    if(notes.length) {
-      html += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Notas</div>';
-      notes.forEach(function(n){ html += '<div class="note-item">'+n+'</div>'; });
-    }
-    html += '<div class="note-row"><input class="note-inp" id="ni-'+c.id+'" placeholder="Agregar nota..." onkeydown="if(event.keyCode===13){event.preventDefault();addNote(\''+c.id+'\');}"><button class="note-add" onclick="event.stopPropagation();addNote(\''+c.id+'\')">+</button></div>';
-    html += '</div>';
-
-    // CARD ACTIONS
-    html += '<div class="card-actions">';
-    html += '<button class="btn-del" onclick="event.stopPropagation();delCase(\''+c.id+'\')">Eliminar</button>';
-    if(c.stage2!=='completado') html += '<button class="btn-adv" onclick="event.stopPropagation();markComplete(\''+c.id+'\')">✅ Marcar completado</button>';
-    html += '</div>';
-  }
-
-  html += '</div>';
-  return html;
-}
-
-function getWorkflowBadge(c) {
-  var ps = c.portalStatus||{};
-  var t  = TYPES[c.type||'medico'];
-  var last = '';
-  t.workflow.forEach(function(w){
-    if(ps[w.portal]&&ps[w.portal].submitted) last = w.portal;
-  });
-  if(!last) return '';
-  var p = PORTALS[last];
-  return '<span class="badge badge-blue">'+p.emoji+' En '+p.name+'</span>';
-}
-
-function renderPortalSection(c) {
-  var t  = TYPES[c.type||'medico'];
-  var ps = c.portalStatus||{};
-  var miss = missingCount(c);
-  var html = '<div class="portal-section">';
-  html += '<div class="portal-title">🌐 Portales de salud</div>';
-
-  t.workflow.forEach(function(w){
-    var p = PORTALS[w.portal];
-    var pst = ps[w.portal]||{};
-    var blockedBy = w.needsFirst && !(ps[w.needsFirst]&&ps[w.needsFirst].submitted);
-    var docsMissing = miss>0;
-    var isSubmitted = pst.submitted;
-    var hasBono = pst.bono_downloaded;
-
-    var cardClass = isSubmitted ? (hasBono?'done':'waiting') : (docsMissing||blockedBy?'':'active');
-    html += '<div class="portal-card '+cardClass+'">';
-    html += '<div class="portal-name">'+p.emoji+' '+p.name+'</div>';
-
-    if(isSubmitted) {
-      html += '<div class="portal-status '+(hasBono?'done':'waiting')+'">'+
-        (hasBono ? '✅ Completado — bono descargado '+fmtDate(pst.bono_date)
-                 : '⏳ Enviado el '+fmtDate(pst.submit_date)+' — esperando respuesta')+'</div>';
-    } else if(blockedBy) {
-      html += '<div class="portal-status">🔒 Primero completa '+PORTALS[w.needsFirst].name+'</div>';
-    } else if(docsMissing) {
-      html += '<div class="portal-status">⚠️ Faltan documentos para poder enviar</div>';
+function mkCard(c){
+  const t=T[c.type]||T.otro;
+  const col=CLR[c.person]||'#6b7280';
+  const ini=(c.person||'?').slice(0,2).toUpperCase();
+  const st=c.stage||'docs';
+  const rdy=allDone(c);
+  const title=t.e+' '+c.person+' · '+t.l+(c.description?' · '+c.description:'');
+  let body='';
+  if(!['submitted','approved','rejected','deductible'].includes(st)){
+    if(!t.docs.length){
+      body='<p style="font-size:12px;color:var(--sub);padding:4px 0">Automatico por IMED.</p>';
     } else {
-      html += '<div class="portal-status">✅ Documentos listos para enviar</div>';
+      const up=t.docs.filter(d=>c.docs&&c.docs[d.id]).length;
+      body=t.docs.map(d=>{
+        const dn=c.docs&&c.docs[d.id];
+        return '<div class="doc-row">'
+          +'<div class="chk '+(dn?'on':'')+'">'+( dn?'✓':'')+'</div>'
+          +'<div class="dlabel"><div class="dtxt">'+d.l+'</div>'+(dn?'<div class="dfn">📎 '+c.docs[d.id]+'</div>':'')+'</div>'
+          +(dn?'<button class="rmbtn" onclick="rmDoc(\''+c.id+'\',\''+d.id+'\')">✕</button>'
+               :'<label class="upbtn">Subir<input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif" onchange="upDoc(\''+c.id+'\',\''+d.id+'\',this)"></label>')
+          +'</div>';
+      }).join('');
+      body+='<div class="pbar"><div class="pfill" style="width:'+(up/t.docs.length*100)+'%"></div></div>';
+      if(rdy){
+        const bv=t.p==='bicevida';
+        body+='<button class="cta '+(bv?'cta-bv':'cta-bm')+'" onclick="goPortal(\''+c.id+'\')">→ Ir a '+t.pl+' y presentar</button>'
+             +'<button class="cta2" onclick="openSol(\''+c.id+'\')">Ya lo presente — ingresar N° solicitud</button>';
+      }
     }
-
-    // What docs to upload to this portal
-    if(!isSubmitted && !blockedBy) {
-      html += '<div style="font-size:11px;color:var(--text-soft);margin:5px 0;">Debes subir: ';
-      html += w.docs.map(function(did){
-        var dd = t.docs.find(function(x){return x.id===did;});
-        var ok = c.docs&&c.docs[did]&&c.docs[did].uploaded;
-        return '<span style="color:'+(ok?'var(--green)':'var(--red)');+'">'+(ok?'✅ ':'❌ ')+(dd?dd.name:did)+'</span>';
-      }).join(', ');
-      html += '</div>';
-    }
-
-    html += '<div class="portal-actions">';
-    html += '<a href="'+p.url+'" target="_blank" class="portal-link '+p.color+'" onclick="event.stopPropagation()">'+p.emoji+' Abrir '+p.name+'</a>';
-    if(!isSubmitted && !blockedBy && !docsMissing) {
-      html += '<button class="portal-btn-mark" onclick="event.stopPropagation();markSubmitted(\''+c.id+'\',\''+w.portal+'\')">📤 Marcar como enviado</button>';
-    }
-    if(isSubmitted && !hasBono) {
-      html += '<button class="portal-btn-download" onclick="event.stopPropagation();triggerDocPortal(\''+c.id+'\',\''+w.portal+'\')">⬇️ Subir bono descargado</button>';
-    }
-    html += '</div>';
-    if(isSubmitted) html += '<div class="portal-timestamp">Enviado: '+fmtDate(pst.submit_date)+(hasBono?' · Bono: '+fmtDate(pst.bono_date):'')+'</div>';
-    html += '</div>';
-  });
-
-  html += '</div>';
-  return html;
-}
-
-// ── FILE HANDLING & OCR ───────────────────────────────
-function handleFileInput(event, mode) {
-  var file = event.target.files[0];
-  if(!file) return;
-  event.target.value = '';
-  if(mode==='global') processDroppedFile(file);
-  else if(mode==='specific') assignDocToCase(file, curDocCaseId, curDocId);
-}
-
-function processDroppedFile(file) {
-  pendingFile = file;
-  var name = file.name.toLowerCase();
-
-  // Show OCR modal with scanning animation
-  document.getElementById('ocrTitle').textContent = '📄 Leyendo: '+file.name;
-  document.getElementById('ocrBody').innerHTML = '<div class="scanning"><div class="scan-spinner"></div><div class="scan-text">Extrayendo información del documento...</div></div>';
-  document.getElementById('ocrModal').classList.add('open');
-
-  extractDocInfo(file).then(function(info){
-    showOcrResult(info, file);
-  });
-}
-
-function extractDocInfo(file) {
-  return new Promise(function(resolve){
-    var name = file.name.toLowerCase();
-    var type = file.type;
-
-    // Guess from filename first
-    var result = guessFromFilename(file.name);
-
-    if(type==='application/pdf') {
-      var fr = new FileReader();
-      fr.onload = function(e){
-        pdfjsLib.getDocument({data: e.target.result}).promise.then(function(pdf){
-          var pages = [];
-          var promises = [];
-          for(var i=1;i<=Math.min(pdf.numPages,3);i++){
-            promises.push(pdf.getPage(i).then(function(page){
-              return page.getTextContent().then(function(tc){
-                return tc.items.map(function(x){return x.str;}).join(' ');
-              });
-            }));
-          }
-          Promise.all(promises).then(function(texts){
-            var fullText = texts.join(' ');
-            var parsed = parseDocumentText(fullText, result);
-            resolve(parsed);
-          });
-        }).catch(function(){ resolve(result); });
-      };
-      fr.readAsArrayBuffer(file);
-    } else {
-      // Image: guess from filename only
-      setTimeout(function(){resolve(result);}, 600);
-    }
-  });
-}
-
-function guessFromFilename(filename) {
-  var n = filename.toLowerCase();
-  var result = {docType:null, person:null, amount:null, date:null, provider:null, raw:filename};
-
-  if(n.includes('boleta')) result.docType='boleta';
-  else if(n.includes('formulario')||n.includes('solicitud')||n.includes('dental')) result.docType='form_dental';
-  else if(n.includes('orden')||n.includes('receta')) result.docType='orden';
-  else if(n.includes('bono')||n.includes('bonificacion')) result.docType='bono_banmedica';
-
-  FAMILY.forEach(function(p){
-    if(n.includes(p.toLowerCase())) result.person=p;
-  });
-  if(n.includes('almu')&&!result.person) result.person='Almudena';
-  if(n.includes('auro')&&!result.person) result.person='Aurora';
-
-  return result;
-}
-
-function parseDocumentText(text, prev) {
-  var result = Object.assign({}, prev, {rawText: text.substring(0,500)});
-
-  // Extract amount
-  var amtMatch = text.match(/\$\s*([\d.,]+)/);
-  if(!amtMatch) amtMatch = text.match(/total[^\d]*([\d.,]+)/i);
-  if(amtMatch) {
-    result.amount = amtMatch[1].replace(/\./g,'').replace(',','');
+  } else if(st==='submitted'){
+    body='<table class="itbl">'
+      +'<tr><td class="lbl">Portal</td><td class="val">'+t.pl+'</td></tr>'
+      +(c.solicitudNum?'<tr><td class="lbl">N° solicitud</td><td class="val">#'+c.solicitudNum+'</td></tr>':'')
+      +(c.sentDate?'<tr><td class="lbl">Enviado</td><td class="val">'+fd(c.sentDate)+'</td></tr>':'')
+      +(c.expectedDate?'<tr><td class="lbl">Respuesta est.</td><td class="val">'+fd(c.expectedDate)+'</td></tr>':'')
+      +'</table>'
+      +'<div class="rbtns">'
+      +'<button class="rok" onclick="openAmt(\''+c.id+'\')">Aprobado 💰</button>'
+      +'<button class="rno" onclick="markS(\''+c.id+'\',\'rejected\')">Rechazado</button>'
+      +'<button class="rded" onclick="markS(\''+c.id+'\',\'deductible\')">Deducible</button>'
+      +'</div>';
+  } else if(st==='approved'){
+    body='<div class="res-row"><div class="res-ico">💰</div><div>'
+      +(c.amount?'<div class="res-amt">'+fm(c.amount)+'</div>':'<div class="res-amt">Aprobado</div>')
+      +'<div class="res-det">'+t.pl+(c.solicitudNum?' · #'+c.solicitudNum:'')+(c.sentDate?' · '+fd(c.sentDate):'')+'</div>'
+      +'</div></div>';
+  } else if(st==='rejected'){
+    body='<div class="res-row"><div class="res-ico">❌</div><div>'
+      +'<div style="font-weight:600;color:var(--red)">Rechazado</div>'
+      +'<div class="res-det">'+t.pl+(c.solicitudNum?' · #'+c.solicitudNum:'')+'</div>'
+      +'</div></div>';
+  } else if(st==='deductible'){
+    body='<div class="res-row"><div class="res-ico">➖</div><div>'
+      +'<div style="font-weight:600;color:var(--gray)">Aplicado al deducible</div>'
+      +'<div class="res-det">'+t.pl+(c.solicitudNum?' · #'+c.solicitudNum:'')+'</div>'
+      +'</div></div>';
   }
+  return '<div class="card">'
+    +'<div class="card-head">'
+    +'<div class="avatar" style="background:'+col+'">'+ini+'</div>'
+    +'<div class="cinfo"><div class="cname">'+title+'</div><div class="cdate">'+fd(c.date)+'</div></div>'
+    +'<button class="btn-del" onclick="del(\''+c.id+'\')" title="Eliminar">✕</button>'
+    +'</div>'
+    +(body?'<div class="card-body">'+body+'</div>':'')
+    +'</div>';
+}
 
-  // Extract date
-  var dateMatch = text.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{4}|\d{2})/);
-  if(!dateMatch) dateMatch = text.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
-  if(dateMatch) result.date = dateMatch[0];
-
-  // Extract name from boleta text
-  FAMILY.forEach(function(p){
-    if(text.toLowerCase().includes(p.toLowerCase()) && !result.person) result.person=p;
+function renderPlanilla(){
+  const ok=cases.filter(c=>c.stage==='approved'&&c.amount);
+  const byM={};
+  ok.forEach(c=>{
+    const k=mkey(c.sentDate||c.date);
+    if(!byM[k])byM[k]={k,lbl:fmon(c.sentDate||c.date),bm:0,bv:0};
+    const t=T[c.type]||T.otro;
+    if(t.p==='bicevida')byM[k].bv+=Number(c.amount);
+    else byM[k].bm+=Number(c.amount);
   });
-
-  // Doc type from text content
-  if(!result.docType) {
-    var t = text.toLowerCase();
-    if(t.includes('boleta')) result.docType='boleta';
-    else if(t.includes('solicitud de reembolso')||t.includes('formulario dental')||t.includes('odontologo')) result.docType='form_dental';
-    else if(t.includes('orden medica')||t.includes('derivacion')) result.docType='orden';
-    else if(t.includes('bono')||t.includes('bonificacion')) result.docType='bono_banmedica';
-    else if(t.includes('receta')) result.docType='receta';
-  }
-
-  // Provider
-  var provMatch = text.match(/sociedad|clinica|centro medico|dr\.|dra\.|kinesiologo/i);
-  if(provMatch) {
-    var idx = text.indexOf(provMatch[0]);
-    result.provider = text.substring(idx, idx+50).trim();
-  }
-
-  return result;
-}
-
-function showOcrResult(info, file) {
-  var DOC_LABELS = {
-    boleta:'Boleta / Factura',form_dental:'Formulario Dental Bice Vida',
-    orden:'Orden Médica',bono_banmedica:'Bono Banmédica',receta:'Receta Médica',
-    bono_isapre:'Bono Isapre/Fonasa'
-  };
-
-  var html = '';
-  html += '<div class="ocr-result">';
-  html += '<div class="ocr-field"><span class="ocr-label">Tipo doc</span><span class="ocr-value '+(info.docType?'found':'not-found')+'">'+( info.docType ? DOC_LABELS[info.docType]||info.docType : '❓ No detectado')+'</span></div>';
-  html += '<div class="ocr-field"><span class="ocr-label">Paciente</span><span class="ocr-value '+(info.person?'found':'not-found')+'">'+(info.person||'❓ No detectado')+'</span></div>';
-  html += '<div class="ocr-field"><span class="ocr-label">Monto</span><span class="ocr-value '+(info.amount?'found':'not-found')+'">'+(info.amount?'$'+Number(info.amount).toLocaleString('es-CL'):'❓ No detectado')+'</span></div>';
-  html += '<div class="ocr-field"><span class="ocr-label">Fecha</span><span class="ocr-value '+(info.date?'found':'not-found')+'">'+(info.date||'❓ No detectado')+'</span></div>';
-  if(info.provider) html += '<div class="ocr-field"><span class="ocr-label">Prestador</span><span class="ocr-value found">'+info.provider.substring(0,40)+'</span></div>';
-  html += '</div>';
-
-  // Find matching cases
-  var matches = findMatchingCases(info);
-  if(matches.length) {
-    html += '<div class="form-label" style="margin-bottom:8px">Asignar a caso existente:</div>';
-    matches.forEach(function(m){
-      html += '<div class="case-match-card" onclick="confirmAssign(this,\''+m.c.id+'\',\''+info.docType+'\')">';
-      html += '<div class="case-match-title">'+TYPES[m.c.type||'medico'].icon+' '+(m.c.name||m.c.description||'Sin nombre')+'</div>';
-      html += '<div class="case-match-meta">'+fmtDate(m.c.date)+(m.c.amount?' · $'+Number(m.c.amount).toLocaleString('es-CL'):'')+(m.score>=80?' · <span style="color:var(--green);font-weight:600">Coincidencia alta</span>':'')+'</div>';
-      html += '</div>';
-    });
-  }
-
-  html += '<div class="form-label" style="margin-bottom:8px;margin-top:12px">O crear nuevo caso:</div>';
-  html += '<button class="btn-primary" onclick="createFromOcr('+JSON.stringify(info).replace(/"/g,"'")+')">➕ Crear nuevo caso</button>';
-  html += '<button class="btn-cancel" onclick="closeModal(\'ocrModal\')">Cancelar</button>';
-
-  document.getElementById('ocrTitle').textContent = '📄 '+file.name;
-  document.getElementById('ocrBody').innerHTML = html;
-}
-
-function findMatchingCases(info) {
-  var scored = cases.filter(function(c){return c.stage2!=='completado';}).map(function(c){
-    var score = 0;
-    var cname = c.name||c.description||'';
-    if(info.person && cname && cname.toLowerCase().includes(info.person.toLowerCase())) score += 50;
-    if(info.docType && TYPES[c.type||'medico'].docs.find(function(d){return d.id===info.docType;})) score += 30;
-    if(info.date && c.date) {
-      var d1=new Date(info.date), d2=new Date(c.date);
-      if(!isNaN(d1)&&!isNaN(d2)&&Math.abs(d1-d2)<7*86400000) score+=20;
-    }
-    return {c:c, score:score};
-  }).filter(function(x){return x.score>=30;}).sort(function(a,b){return b.score-a.score;});
-  return scored.slice(0,3);
-}
-
-function confirmAssign(el, caseId, docType) {
-  document.querySelectorAll('.case-match-card').forEach(function(x){x.classList.remove('sel');});
-  el.classList.add('sel');
-  // Find the right docId for this case
-  var c = cases.find(function(x){return x.id==caseId;});
-  var docId = docType || 'boleta';
-  assignDocToCase(pendingFile, caseId, docId, true);
-}
-
-function createFromOcr(info) {
-  var type = guessTypeFromDocType(info.docType);
-  var person = info.person || '?';
-  var t = TYPES[type];
-  var newCase = {
-    id: Date.now(),
-    description: person + ' - ' + t.label,
-    type: type,
-    date: normalizeDate(info.date) || fmtDateInput(new Date()),
-    amount: info.amount || '',
-    stage2: 'pendiente',
-    docs: {},
-    portalStatus: {},
-    notes: ['Creado automáticamente desde documento']
-  };
-  // Assign the doc
-  if(info.docType && pendingFile) {
-    newCase.docs[info.docType] = {name:pendingFile.name, uploaded:true, date:new Date().toISOString()};
-  }
-  cases.unshift(newCase);
-  saveToAPI({action:'add',item:{id:newCase.id,description:newCase.description,date:newCase.date,amount:newCase.amount,type:newCase.type,stage:'pending',notes:newCase.notes}});
-  closeModal('ocrModal');
-  renderAll();
-  showToast('✅ Caso creado: '+newCase.description);
-}
-
-function guessTypeFromDocType(docType) {
-  if(docType==='form_dental'||docType==='bono_isapre') return 'dental';
-  if(docType==='orden') return 'kine';
-  if(docType==='receta') return 'farmacia';
-  return 'medico';
-}
-
-function normalizeDate(str) {
-  if(!str) return null;
-  var m = str.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
-  if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
-  m = str.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
-  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
-  return null;
-}
-
-function assignDocToCase(file, caseId, docId, fromModal) {
-  var c = cases.find(function(x){return x.id==caseId;});
-  if(!c) return;
-  if(!c.docs) c.docs = {};
-  c.docs[docId] = {name:file.name, uploaded:true, date:new Date().toISOString(), size:file.size};
-  saveToAPI({action:'updateDoc',id:caseId,docId:docId,fileName:file.name});
-  if(fromModal) closeModal('ocrModal');
-  renderAll();
-  showToast('✅ Documento asignado a: '+(c.name||c.description||'Sin nombre'));
-}
-
-// ── PORTAL ACTIONS ────────────────────────────────────
-function markSubmitted(caseId, portal) {
-  var c = cases.find(function(x){return x.id==caseId;});
-  if(!c) return;
-  if(!c.portalStatus) c.portalStatus={};
-  c.portalStatus[portal] = {submitted:true, submit_date:new Date().toISOString()};
-  saveToAPI({action:'updatePortal',id:caseId,portal:portal,status:'submitted'});
-  renderAll();
-  showToast('📤 Marcado como enviado a '+PORTALS[portal].name);
-}
-
-function triggerDocPortal(caseId, portal) {
-  curDocCaseId = caseId;
-  curDocId = 'bono_'+portal.replace('banmedica','banmedica').replace('bicevida','bicevida');
-  // Custom handler for portal bonos
-  window._pendingPortal = portal;
-  document.getElementById('docFileIn').onchange = function(e){
-    var file = e.target.files[0];
-    if(!file) return;
-    e.target.value='';
-    var c = cases.find(function(x){return x.id==curDocCaseId;});
-    if(!c) return;
-    if(!c.docs) c.docs={};
-    if(!c.portalStatus) c.portalStatus={};
-    var docKey = 'bono_'+window._pendingPortal;
-    c.docs[docKey]={name:file.name,uploaded:true,date:new Date().toISOString()};
-    c.portalStatus[window._pendingPortal].bono_downloaded=true;
-    c.portalStatus[window._pendingPortal].bono_date=new Date().toISOString();
-    saveToAPI({action:'updateDoc',id:curDocCaseId,docId:docKey,fileName:file.name});
-    renderAll();
-    showToast('⬇️ Bono guardado: '+file.name);
-  };
-  document.getElementById('docFileIn').click();
-}
-
-// ── CASE MANAGEMENT ───────────────────────────────────
-function toggleCard(id) {
-  cases.forEach(function(c){if(c.id==id) c._expanded=!c._expanded;});
-  renderAll();
-}
-
-function markComplete(id) {
-  var c = cases.find(function(x){return x.id==id;});
-  if(c){c.stage2='completado';saveToAPI({action:'advance',id:id,stage:'done'});renderAll();showToast('✅ Caso completado');}
-}
-
-function delCase(id) {
-  if(!confirm('¿Eliminar este caso?')) return;
-  cases = cases.filter(function(c){return c.id!=id;});
-  saveToAPI({action:'delete',id:id});
-  renderAll();
-  showToast('🗑️ Eliminado');
-}
-
-function addNote(caseId) {
-  var inp = document.getElementById('ni-'+caseId);
-  if(!inp||!inp.value.trim()) return;
-  var c = cases.find(function(x){return x.id==caseId;});
-  if(!c) return;
-  if(!c.notes) c.notes=[];
-  c.notes.push(inp.value.trim());
-  saveToAPI({action:'addNote',id:caseId,note:inp.value.trim()});
-  renderAll();
-}
-
-function triggerDoc(caseId, docId) {
-  curDocCaseId = caseId;
-  curDocId = docId;
-  document.getElementById('docFileIn').onchange = function(e){
-    var file = e.target.files[0];
-    if(!file) return;
-    e.target.value='';
-    assignDocToCase(file, curDocCaseId, curDocId, false);
-  };
-  document.getElementById('docFileIn').click();
-}
-
-// ── ADD CASE ──────────────────────────────────────────
-function openNewModal() { document.getElementById('newModal').classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); selPersons=[]; selType=null; document.querySelectorAll('.pchip').forEach(function(x){x.classList.remove('sel');}); document.querySelectorAll('.type-opt').forEach(function(x){x.classList.remove('sel');}); }
-function togglePerson(el,name){el.classList.toggle('sel');var i=selPersons.indexOf(name);if(i>-1)selPersons.splice(i,1);else selPersons.push(name);}
-function selType(el,t){document.querySelectorAll('.type-opt').forEach(function(x){x.classList.remove('sel');});el.classList.add('sel');selType=t;}
-
-function quickAdd(type) {
-  selType = type;
-  openNewModal();
-  document.querySelectorAll('.type-opt').forEach(function(el){
-    if(el.getAttribute('onclick').includes("'"+type+"'")) el.classList.add('sel');
-  });
-}
-
-function saveNew() {
-  if(!selPersons.length){showToast('Selecciona al menos una persona');return;}
-  if(!selType){showToast('Selecciona el tipo de atención');return;}
-  var date = document.getElementById('nDate').value;
-  var amount = document.getElementById('nAmount').value;
-  var desc = document.getElementById('nDesc').value;
-  var t = TYPES[selType];
-  selPersons.forEach(function(person){
-    var c = {id:Date.now()+Math.floor(Math.random()*999),description:person+' - '+t.label+(desc?' · '+desc:''),type:selType,date:date,amount:amount||'',stage2:'pendiente',docs:{},portalStatus:{},notes:[]};
-    cases.unshift(c);
-    saveToAPI({action:'add',item:{id:c.id,description:c.description,date:c.date,amount:c.amount,type:c.type,stage:'pending',notes:[]}});
-  });
-  closeModal('newModal');
-  renderAll();
-  showToast('✅ '+selPersons.length+' caso(s) creado(s)');
-  document.getElementById('nAmount').value='';
-  document.getElementById('nDesc').value='';
-}
-
-// ── NATURAL LANGUAGE ──────────────────────────────────
-function processText() {
-  var text = document.getElementById('smartInp').value.trim();
-  if(!text){showToast('Escribe algo primero');return;}
-  var parsed = parseNL(text);
-  if(!parsed.length){showToast('No entendí. Intenta con el botón + de abajo.');return;}
-  parsed.forEach(createCaseFromParsed);
-  document.getElementById('smartInp').value='';
-  showToast('✅ '+parsed.length+' caso(s) creado(s)');
-}
-
-function parseNL(text) {
-  var t = text.toLowerCase();
-  var type='medico';
-  if(t.includes('dent')||t.includes('ortod')||t.includes('modelo')) type='dental';
-  else if(t.includes('kine')||t.includes('fisio')||t.includes('terapia')) type='kine';
-  else if(t.includes('farmac')||t.includes('remedio')||t.includes('medicam')) type='farmacia';
-  var persons=[];
-  FAMILY.forEach(function(p){if(t.includes(p.toLowerCase()))persons.push(p);});
-  if(t.includes('almu')&&!persons.includes('Almudena'))persons.push('Almudena');
-  if(t.includes('auro')&&!persons.includes('Aurora'))persons.push('Aurora');
-  if(!persons.length)persons=['?'];
-  var today = new Date();
-  var d = fmtDateInput(t.includes('ayer')?(new Date(today-86400000)):today);
-  return persons.map(function(person){
-    return {id:Date.now()+Math.floor(Math.random()*999),description:person+' - '+TYPES[type].label,type:type,date:d,amount:'',stage2:'pendiente',docs:{},portalStatus:{},notes:[text]};
-  });
-}
-
-function createCaseFromParsed(c) {
-  cases.unshift(c);
-  saveToAPI({action:'add',item:{id:c.id,description:c.description,date:c.date,amount:c.amount,type:c.type,stage:'pending',notes:c.notes}});
-  renderAll();
-}
-
-// ── PIPELINE VIEW ─────────────────────────────────────
-function showCase(id) {
-  showTab('activos', document.querySelector('.tab'));
-  setTimeout(function(){
-    var el = document.getElementById('card-'+id);
-    if(el) el.scrollIntoView({behavior:'smooth'});
-  }, 150);
-}
-
-function renderPipeline() {
-  var merged = [
-    {ids:['pendiente'],                   label:'Pendiente',      cls:'pendiente'},
-    {ids:['bm_enviado'],                  label:'En Banmedica',   cls:'bm_enviado'},
-    {ids:['bm_aprobado'],                 label:'Aprobado BM',    cls:'bm_aprobado'},
-    {ids:['bv_enviado'],                  label:'En Bice Vida',   cls:'bv_enviado'},
-    {ids:['bv_rechazado','bm_rechazado'], label:'Rechazado',      cls:'rechazado'},
-    {ids:['completado'],                  label:'Completado',     cls:'completado'}
-  ];
-
-  var html = '<div class="pipeline"><div class="pipe-cols">';
-  merged.forEach(function(col){
-    var items = cases.filter(function(c){ return col.ids.indexOf(c.stage2)>-1; });
-    html += '<div class="pipe-col">';
-    html += '<div class="pipe-col-hdr '+col.cls+'">'+col.label+'<span class="pipe-count">'+items.length+'</span></div>';
-    html += '<div class="pipe-col-body">';
-    if(!items.length) {
-      html += '<div class="pipe-empty">Sin casos</div>';
-    } else {
-      items.forEach(function(c){
-        var t = TYPES[c.type||'medico'];
-        var title = c.name||c.description||'Sin nombre';
-        var miss = missingCount(c);
-        var warn = (miss>0&&col.ids.indexOf('pendiente')>-1) ? ' <span style="color:var(--red);font-size:10px">'+miss+' doc</span>' : '';
-        html += '<div class="pipe-card" onclick="showCase('+c.id+')">';
-        html += '<div class="pipe-card-type">'+t.icon+'</div>';
-        html += '<div class="pipe-card-title">'+title+warn+'</div>';
-        html += '<div class="pipe-card-meta">'+fmtDate(c.date)+'</div>';
-        if(c.amount) html += '<div class="pipe-card-amount">$'+Number(c.amount).toLocaleString('es-CL')+'</div>';
-        html += '</div>';
-      });
-    }
-    html += '</div></div>';
-  });
-  html += '</div></div>';
-  return html;
-}
-
-// ── HELPERS ─────────────────────────────────────────────────
-function showTab(tab,el){activeTab=tab;document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderAll();}
-function fmtDate(s){if(!s)return'';var d=new Date(s);return isNaN(d)?s:d.toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'});}
-function saveToAPI(data){fetch(API,{method:'POST',mode:'no-cors',body:JSON.stringify(data)}).catch(function(){});localStorage.setItem('rf_v3',JSON.stringify(cases));}
-function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},2800);}
-
-document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)el.classList.remove('open');});});
-
-init();
-</script>
-</body>
-</html>
+  const rows=Object.values(byM).sort((a,b)=>b.k.localeCompare(a.k));
+  let tbm=0,tbv=0;
+  rows.forEach(r=>{tbm+=r.bm;tbv+=r.bv;});
+  document.getElementById('plan-chips').innerHTML=
+    '<div class="pchip bm"><div class="cl">Banmedica total</div><div class="cv bm">'+fm(tbm)+'</div></div>'
+    +'<div class="pchip bv"><div class="cl">Bice Vida total</div><div class="cv bv">'+fm(tbv)+'</div></div>'
+    +'<div class="pchip tot"><div class="cl">Total</div><div class="cv tot">'+fm(tbm+tbv)+'</div></div>';
+  const tb=document.getElementById('plan-body');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="4" class="empty
